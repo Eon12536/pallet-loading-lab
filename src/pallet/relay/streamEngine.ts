@@ -13,11 +13,16 @@ export function createStream(s:Scenario):RelayWorld{
  return {runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:4},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:4},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:4},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
 }
 export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],decision:FlowDecision){
- if(decision.runId!==world.runId)return {world,motions};
+ if(decision.runId!==world.runId||decision.cellVersions?.some((v,i)=>v!==world.cells[i]?.version))return {world,motions};
  const w=structuredClone(world),next=[...motions];
- for(const proposal of decision.proposals){
+ // Keep hold reasons visible, but only centrally assigned offers may start a robot.
+ const assigned=decision.commands?new Set(decision.commands.map(p=>p.robot+':'+p.boxId)):null;
+ const proposals=decision.commands?[...decision.commands,...decision.proposals.filter(p=>!assigned!.has(p.robot+':'+p.boxId)).map(p=>({...p,candidates:[],reason:p.candidates.length?'중앙 배정 보류 · 다른 조합 우선 · 벨트 순환':p.reason}))]:decision.proposals;
+ for(const proposal of proposals){
   const b=w.boxes.find(b=>b.observation.id===proposal.boxId);
   if(!b||b.status!=='belt'||proposal.cellVersion!==w.cells[proposal.robot].version||w.stream!.cells[proposal.robot].phase!=='loading')continue;
+  const scheduledHold=assigned&&!assigned.has(proposal.robot+':'+proposal.boxId)&&decision.proposals.some(p=>p.robot===proposal.robot&&p.boxId===proposal.boxId&&p.candidates.length);
+  if(scheduledHold){b.flow!.lastReason=proposal.reason;continue;}
   const failures:string[]=[],action=interceptAction(s,w,proposal,next.map(m=>m.action),failures);
   const reason=action?proposal.reason:proposal.candidates.length?`${[...new Set(failures)].slice(0,2).join(' / ')||'현재 예약 불가'} · 다음 구역으로 통과`:proposal.reason;
   b.flow!.checks[proposal.robot]={version:proposal.cellVersion,at:w.time,reason,blocked:proposal.blocked,tested:proposal.tested};b.flow!.lastReason=reason;

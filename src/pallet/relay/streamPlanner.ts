@@ -1,3 +1,4 @@
+import {assignCentrally,type DispatchSummary} from './centralDispatch';
 import {candidateSet} from '../planner';
 import {compactScore} from '../compactPacking';
 import {inspectConstraints} from '../constraints';
@@ -12,7 +13,7 @@ import type {Candidate,PlanningInput,Scenario,PathPoint,Vec3} from '../types';
 import type {RelayWorld,RelayAction,RelayBox} from './types';
 
 export interface FlowProposal {robot:number;boxId:string;cellVersion:number;candidates:Candidate[];reason:string;blocked:number;tested:number}
-export interface FlowDecision {runId:string;proposals:FlowProposal[];milliseconds:number;checks:number}
+export interface FlowDecision {runId:string;proposals:FlowProposal[];milliseconds:number;checks:number;commands?:FlowProposal[];dispatch?:DispatchSummary;cellVersions?:number[]}
 const distance=(a:Vec3,b:Vec3)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 const cache=new Map<string,Candidate[]>();
 const diagnostics=new Map<string,string>();
@@ -41,7 +42,7 @@ function sites(ctx:PlanningInput,key?:string){
   diagnostics.set(key,[...reasons].sort((a,b)=>b[1]-a[1]).slice(0,2).map(r=>r[0]).join(' / '));
  }return candidates;
 }
-export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[]):FlowDecision{
+export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[],central=true):FlowDecision{
  const start=performance.now(),proposals:FlowProposal[]=[];let checks=0;
  const known=w.boxes.filter(b=>b.status==='belt'&&b.flow!.measuredAt<=w.time);
  for(let robot=0;robot<4;robot++){
@@ -79,16 +80,17 @@ export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[]):FlowDecisio
     }else reason=`지지·하중·높이 통과 · 후속 막힘 표본 ${blocked}/${tested} · 이동 중 추적 집기`;
    }
    proposals.push({robot,boxId:box.observation.id,cellVersion:w.cells[robot].version,candidates:chosen,reason,blocked,tested});
-   if(chosen.length)break;
+   if(chosen.length&&!central)break;
   }
  }
- return {runId:w.runId,proposals,milliseconds:performance.now()-start,checks};
+ const assignment=central?assignCentrally(proposals,busy):{};
+ return {runId:w.runId,proposals,...assignment,...(central?{cellVersions:w.cells.map(c=>c.version)}:{}),milliseconds:performance.now()-start,checks};
 }
 
 // Recompute interception at launch time, not at the worker's earlier snapshot time.
 export function interceptAction(s:Scenario,w:RelayWorld,p:FlowProposal,running:RelayAction[],failures:string[]=[]):RelayAction|undefined{
  const b=w.boxes.find(b=>b.observation.id===p.boxId);
- if(!b||b.status!=='belt'||p.cellVersion!==w.cells[p.robot].version||w.stream!.cells[p.robot].phase!=='loading'||running.some(a=>a.robot===p.robot))return;
+ if(!b||b.status!=='belt'||!b.flow||b.flow.measuredAt>w.time||p.cellVersion!==w.cells[p.robot].version||w.stream!.cells[p.robot].phase!=='loading'||running.some(a=>a.robot===p.robot))return;
  const g=s.constraints.gripper,idle=toLocal(park(p.robot,s.pallet),p.robot,s.pallet),speed=w.stream!.speed;
  for(const c of p.candidates){
   let approach=2;

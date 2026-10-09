@@ -1,19 +1,18 @@
-# Pallet Loading Lab · 최신 결과 v20
+# 중앙 오케스트레이션 · 도착 순서 개선 · v21
 
-2026-10-09 성능 대시보드 갱신본입니다. 기존 4대 컨베이어와 변형 실험에 6개 핵심 지표, 단계별 3D 재생, 위험 박스 추적 및 동일 조건 비교를 추가했습니다.
+- [중앙 배차 4대 로봇 시뮬레이터](https://pallet-loading-lab.eon3602.chatgpt.site/?palletDemo=compact&palletView=relay&v=21#pallet)
+- [논문 아이디어 비교 대시보드](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=adaptive&v=21#pallet)
+- [개선 내용·실측 비교·실행법·검증 한계](docs/ORDERING-IMPROVEMENTS.md)
+- [중앙 배정 구조·로봇 명령·검증](docs/CENTRAL-ORCHESTRATION.md)
 
-- [성능 대시보드 바로 실행](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=adaptive&v=20#pallet)
-- [4대 로봇 컨베이어 대시보드](https://pallet-loading-lab.eon3602.chatgpt.site/?palletDemo=compact&palletView=relay&v=20#pallet)
-- [새 대시보드 조작·지표·검증·한계](docs/PERFORMANCE-DASHBOARD.md)
-- [알고리즘·조작 방법·가정과 한계](docs/adaptive-packing.md)
-- [동일 입력 비교 결과 CSV](docs/adaptive-results/comparison.csv) · [JSON](docs/adaptive-results/comparison.json)
-- [기존 v19 검증 기록: 9개 파일 / 50개 테스트 통과](docs/adaptive-results/final-tests.txt)
+현재 연속 공정은 중앙 Worker가 모든 팔레트 상태와 계측된 박스를 받아 로봇/박스 조합을 배정합니다. 기존 셀 순차 선별은 비교 옵션으로 남아 있습니다. Worker는 현장 서버의 역할을 모사하며 실제 서버·PLC 연결을 주장하지 않습니다. 아래의 독립 셀/전달대 설명은 이전 실험 기록입니다.
 
-로컬 실행: Node.js 22.12 이상에서 이 폴더로 이동한 뒤 `npm ci`, `npm run dev`를 실행합니다. 빌드는 `npm run build`입니다. 공개 실행 URL은 GitHub 저장소와 별도로 배포되어 있습니다.
+## 성능 대시보드 · v20 기록
 
-이번 업로드는 완성된 v20 소스와 실측 결과입니다. 이후 요청된 3DORP GLA/GLAS 고도화는 이 버전에 포함되지 않았습니다. 실물 로봇 IK·힘 제어·진공 밀봉 검증 완료를 의미하지 않습니다.
+[공개 대시보드 실행](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=adaptive&v=20#pallet) · [구현·조작·가정·검증](docs/PERFORMANCE-DASHBOARD.md)
 
----
+6개 핵심 지표, 단계별 3D 재생, 위험 박스 추적, 동일 조건 A/B/C 비교를 추가했습니다. 기존 계획기와 4대 컨베이어 화면은 유지합니다. 실물 로봇과 동적 안정성은 미검증입니다.
+
 ## 공용 컨베이어 스튜디오 · 2026-10-08
 
 4대의 로봇을 하나의 순환 컨베이어에 일렬로 배치했습니다. 벨트 폭 900 mm, 속도 600 mm/s, 데크 높이 450 mm입니다. 보류 박스는 다음 로봇의 픽업 구역에 실제 이송 시간이 지난 뒤 도착합니다. 기존 작업이 있으면 1 m 앞에서 기다렸다가 구역이 비면 접근합니다. 다음 로봇은 팔레트 직접 적재 또는 로컬 보관을 판단합니다. 모든 로봇이 독립 시계로 동시 작업하며 수량을 보존합니다.
