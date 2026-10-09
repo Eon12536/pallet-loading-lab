@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Pallet } from '../types';
 import { CONVEYOR,beltBounds,beltStation } from './conveyor';
-import { ROBOT_COUNT } from './layout';
+import {robotCount} from './fleet';
 
 export function createConveyorView(p:Pallet) {
   const group=new THREE.Group();group.name='single-shared-conveyor';
@@ -31,7 +31,7 @@ export function createConveyorView(p:Pallet) {
   run(left,(front+back)/2,front-back+width,true);run(right,(front+back)/2,front-back+width,true,true);
   const frame=new THREE.InstancedMesh(geometry,steel,parts.length),dummy=new THREE.Object3D();
   parts.forEach((v,i)=>{dummy.position.set(v.x,v.y,v.z);dummy.scale.set(v.w,v.h,v.d);dummy.updateMatrix();frame.setMatrixAt(i,dummy.matrix);});frame.castShadow=true;group.add(frame);
-  for(let i=0;i<ROBOT_COUNT;i++){
+  for(let i=0;i<robotCount(p);i++){
     const point=beltStation(i,p);
     for(const edge of [-1,1]){const marker=new THREE.Mesh(new THREE.BoxGeometry(.8,.012,.045),markings);marker.position.set(point.x/1000,z+.008,front+edge*(width/2-.055));group.add(marker);}
   }

@@ -11,7 +11,9 @@ export interface MaterialData { packaging?:BoxSpec; material?:Material;strengthF
 export interface BoxType extends MaterialData { id:string; name:string; size:Dimensions; weight:number; quantity:number; orientations:Orientation[]; color:string; handling?:Handling }
 export interface StabilitySettings { maxSlenderness:number;minMarginRatio:number;lateralAccelerationG:number;loadSafetyFactor:number;slendernessMode?:'hard'|'score' }
 export const DEFAULT_STABILITY:StabilitySettings={maxSlenderness:2,minMarginRatio:.1,lateralAccelerationG:.15,loadSafetyFactor:1.25};
-export interface Pallet { width:number; depth:number; maxHeight:number }
+export interface RobotLayout { count:number; architecture:'floor'|'ceiling'|'mixed'; floorCount:number }
+// Optional cell-layout metadata; it does not change the pallet physical boundary.
+export interface Pallet { width:number; depth:number; maxHeight:number; robotLayout?:RobotLayout }
 export interface Constraints {
   packagingRobot?:ReachModel;
   standingHeight?:{enabled:boolean;maxRiseMm:number};

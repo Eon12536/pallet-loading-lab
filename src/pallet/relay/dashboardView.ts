@@ -1,0 +1,2 @@
+// Existing relay/adaptive/bookmarked views remain addressable.
+export function initialDashboardView(search:string){const q=new URLSearchParams(search),v=q.get('palletView');if(v&&['single','relay','simulate','adaptive','packaging','compare','data','guide'].includes(v))return v;if(q.get('palletDemo')==='relay')return 'relay';if(q.get('palletDemo')==='strategies')return 'simulate';return 'single';}

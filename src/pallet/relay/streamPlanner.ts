@@ -1,3 +1,4 @@
+import {robotObservation} from './fleet';
 import {assignCentrally,type DispatchSummary} from './centralDispatch';
 import {candidateSet} from '../planner';
 import {compactScore} from '../compactPacking';
@@ -27,7 +28,7 @@ export function observedProblem(s:Scenario,w:RelayWorld){
  return {scenario:{...structuredClone(s),types:s.types.filter(t=>ids.has(t.id)),events:[]},world};
 }
 function input(s:Scenario,w:RelayWorld,robot:number,b:RelayBox):PlanningInput{
- return {runId:w.runId,stepId:w.revision,pallet:s.pallet,types:s.types,constraints:receiveConstraints(s),placements:w.cells[robot].placements,current:{...b.observation,pickupPosition:beltPickup(b.observation,robot,s.pallet)},remaining:{},algorithm:'greedy',settings};
+ return {runId:w.runId,stepId:w.revision,pallet:s.pallet,types:s.types,constraints:receiveConstraints(s),placements:w.cells[robot].placements,current:{...robotObservation(s.pallet,robot,b.observation),pickupPosition:beltPickup(b.observation,robot,s.pallet)},remaining:{},algorithm:'greedy',settings};
 }
 function sites(ctx:PlanningInput,key?:string){
  if(key&&cache.has(key))return structuredClone(cache.get(key)!);
@@ -45,7 +46,7 @@ function sites(ctx:PlanningInput,key?:string){
 export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[],central=true):FlowDecision{
  const start=performance.now(),proposals:FlowProposal[]=[];let checks=0;
  const known=w.boxes.filter(b=>b.status==='belt'&&b.flow!.measuredAt<=w.time);
- for(let robot=0;robot<4;robot++){
+ for(let robot=0;robot<w.cells.length;robot++){
   if(busy.includes(robot)||w.stream!.cells[robot].phase!=='loading')continue;
   const eligible=known.filter(b=>inPickWindow(b,w.time,w.stream!.speed,s.pallet,robot)&&(!b.flow!.checks[robot]||b.flow!.checks[robot].version!==w.cells[robot].version||w.time-b.flow!.checks[robot].at>25))
    .sort((a,b)=>beltArc(b,w.time,w.stream!.speed,s.pallet)-beltArc(a,w.time,w.stream!.speed,s.pallet)).slice(0,2);
@@ -59,12 +60,12 @@ export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[],central=true
    if(!ctx.placements.length&&!foundation&&!w.stream!.inputClosed&&box.flow!.passes<1&&(cellAge<10||incomingFoundation&&cellAge<30)){proposals.push({robot,boxId:box.observation.id,cellVersion:w.cells[robot].version,candidates:[],reason:'관측된 받침 도착을 잠시 기다림 · 바닥 후보 재검토',blocked:0,tested:0});continue;}
    if(options.length){
     const others=known.filter(b=>b!==box).sort((a,b)=>volume(b.observation.size)-volume(a.observation.size)).slice(0,3);
-    const feasible=others.filter(b=>{checks++;return sites({...ctx,current:{...b.observation,pickupPosition:beltPickup(b.observation,robot,s.pallet)}},`${w.runId}/${robot}/${w.cells[robot].version}/${b.observation.id}`).length>0;});tested=feasible.length;
+    const feasible=others.filter(b=>{checks++;return sites({...ctx,current:{...robotObservation(s.pallet,robot,b.observation),pickupPosition:beltPickup(b.observation,robot,s.pallet)}},`${w.runId}/${robot}/${w.cells[robot].version}/${b.observation.id}`).length>0;});tested=feasible.length;
     let lowestLoss=Infinity;
     for(const c of options.slice(0,6)){
      let loss=0;
      for(const b of feasible){checks++;const fitKey=`${key}/${c.id}/${b.observation.id}`;let fits=fitCache.get(fitKey);
-      if(fits===undefined){fits=sites({...ctx,current:{...b.observation,pickupPosition:beltPickup(b.observation,robot,s.pallet)},placements:[...ctx.placements,c.placement],settings:{...settings,maxCandidates:48}}).length>0;if(fitCache.size>2048)fitCache.clear();fitCache.set(fitKey,fits);}
+      if(fits===undefined){fits=sites({...ctx,current:{...robotObservation(s.pallet,robot,b.observation),pickupPosition:beltPickup(b.observation,robot,s.pallet)},placements:[...ctx.placements,c.placement],settings:{...settings,maxCandidates:48}}).length>0;if(fitCache.size>2048)fitCache.clear();fitCache.set(fitKey,fits);}
       if(!fits){
       const elsewhere=w.cells.some((cell,other)=>other!==robot&&w.stream!.cells[other].phase==='loading'&&sites(input(s,w,other,b),`${w.runId}/${other}/${cell.version}/${b.observation.id}`).length>0);
       if(!elsewhere)loss++;

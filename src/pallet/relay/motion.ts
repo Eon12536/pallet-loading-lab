@@ -1,9 +1,9 @@
+import {robotReach} from './fleet';
 import { beltPickup,beltStation,sourcePickup,CONVEYOR } from './conveyor';
 import { Vector3 } from 'three';
 import { gripperPath,incomingPosition } from '../constraints';
 import { intersects,top } from '../geometry';
 import { poseQuaternion } from '../poseRendering';
-import { solveRobotArm } from '../robotArm';
 import { cellPose,toWorld,toLocal,park,nextRobot } from './layout';
 import type { GripPath,Observation,Placement,Scenario,Vec3 } from '../types';
 import type { RelayAction,RelaySegment,RelayWorld } from './types';
@@ -68,9 +68,9 @@ export function inspectMotion(s:Scenario,w:RelayWorld,a:RelayAction):string[]{
  if(box.weight+g.mass>g.payload)reasons.push('전달/적재 가반하중 초과');
  if(a.pad!==undefined&&(box.size.w>800||box.size.d>CONVEYOR.width-100))reasons.push('벨트 픽업 구역 / 대기대 치수 초과');
  if(a.segments){for(const seg of a.segments){if(Math.max(seg.from.z,seg.to.z)+g.height>s.constraints.workspace.zMax)reasons.push('작업 높이 초과');
-  for(let k=0;k<=12;k++){const t=k/12,p={x:seg.from.x+(seg.to.x-seg.from.x)*t,y:seg.from.y+(seg.to.y-seg.from.y)*t,z:seg.from.z+(seg.to.z-seg.from.z)*t};if(!solveRobotArm(toLocal(p,a.robot,s.pallet),{x:0,y:0,z:1},g.height).reachable){reasons.push('가상 팔 도달 불가');break;}}
+  for(let k=0;k<=12;k++){const t=k/12,p={x:seg.from.x+(seg.to.x-seg.from.x)*t,y:seg.from.y+(seg.to.y-seg.from.y)*t,z:seg.from.z+(seg.to.z-seg.from.z)*t};if(!robotReach(s.pallet,a.robot,toLocal(p,a.robot,s.pallet),{x:0,y:0,z:1},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}}
  }}else if(a.path){for(let i=1;i<a.path.points.length;i++){const u=a.path.points[i-1],v=a.path.points[i];for(let k=0;k<=12;k++){const t=k/12,p={x:u.tcp.x+(v.tcp.x-u.tcp.x)*t,y:u.tcp.y+(v.tcp.y-u.tcp.y)*t,z:u.tcp.z+(v.tcp.z-u.tcp.z)*t},q=poseQuaternion(u.pose??(u.yaw===90?90:0)).slerp(poseQuaternion(v.pose??(v.yaw===90?90:0)),t),normal=new Vector3(0,1,0).applyQuaternion(q);
-   if(!solveRobotArm(p,{x:normal.x,y:normal.z,z:normal.y},g.height).reachable){reasons.push('가상 팔 도달 불가');break;}
+   if(!robotReach(s.pallet,a.robot,p,{x:normal.x,y:normal.z,z:normal.y},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}
   }} }
  // Own-pallet paths are checked by inspectConstraints; additional cells/pads are obstacles here.
  const objects=w.cells.flatMap((c,i)=>a.segments||i!==a.robot?c.placements.map(p=>({box:p,cell:i})):[]);

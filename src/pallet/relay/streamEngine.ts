@@ -1,3 +1,4 @@
+import {robotCount} from './fleet';
 import {ArrivalEnvironment} from '../environment';
 import {top} from '../geometry';
 import {inspectConstraints} from '../constraints';
@@ -9,8 +10,8 @@ import type {Scenario} from '../types';
 import type {RelayWorld,RelayMotion} from './types';
 let sequence=0;
 export function createStream(s:Scenario):RelayWorld{
- const environment=new ArrivalEnvironment({...s,supplyMode:'arrival'}),boxes=Array.from({length:environment.total},(_,i)=>({observation:environment.current(i)!,owner:-1,visited:[],forwardedAt:Array(4).fill(-1),status:'pending' as const}));
- return {runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:4},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:4},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:4},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
+ const count=robotCount(s.pallet),environment=new ArrivalEnvironment({...s,supplyMode:'arrival'}),boxes=Array.from({length:environment.total},(_,i)=>({observation:environment.current(i)!,owner:-1,visited:[],forwardedAt:Array(count).fill(-1),status:'pending' as const}));
+ return {runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:count},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:count},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:count},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
 }
 export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],decision:FlowDecision){
  if(decision.runId!==world.runId||decision.cellVersions?.some((v,i)=>v!==world.cells[i]?.version))return {world,motions};

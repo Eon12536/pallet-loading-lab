@@ -9,5 +9,5 @@ export function applyStreamSettings(s:Scenario,draft:StreamSettings){
  const current=streamSettings(s);
  // Changing only the height must preserve measured carton specs and packaging constraints.
  if(current.seed===draft.seed&&current.count===draft.count){const next=structuredClone(s);next.pallet.maxHeight=draft.height;return next;}
- return streamInventory(draft.seed,draft.count,draft.height);
+ const next=streamInventory(draft.seed,draft.count,draft.height);next.pallet.robotLayout=s.pallet.robotLayout?{...s.pallet.robotLayout}:undefined;return next;
 }
