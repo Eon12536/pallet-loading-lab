@@ -5,3 +5,9 @@
 @media(min-width:1700px){.bench-charts{grid-template-columns:380px minmax(0,1fr)}.bench-scene{height:520px}}
 @media(max-width:1100px){.bench-layout{grid-template-columns:230px minmax(0,1fr)}.bench-charts{grid-template-columns:1fr}.bench-replay{grid-template-columns:1fr}.bench-step-facts{border-left:0;border-top:1px solid var(--bench-rule);padding:var(--bench-s) 0}.bench-heading{align-items:flex-start}}
 @media(max-width:760px){.benchmark-lab{padding:var(--bench-s)}.bench-layout{grid-template-columns:1fr}.bench-controls{border-right:0;border-bottom:1px solid var(--bench-rule);padding:0 0 var(--bench-m)}.bench-controls .bench-checks{grid-template-columns:repeat(2,minmax(0,1fr));max-height:220px}.bench-heading{display:block}.bench-actions{margin-top:var(--bench-s)}.benchmark-lab h1{font-size:19px}.bench-panel{padding:var(--bench-s)}.benchmark-lab details.bench-panel{padding:var(--bench-s)}.bench-section-head{display:block}.bench-weight{grid-template-columns:110px minmax(40px,1fr) 55px}.bench-bars>div{grid-template-columns:115px minmax(20px,1fr) 44px}.bench-scene{height:320px}.bench-thresholds{grid-template-columns:repeat(2,minmax(0,1fr))}.bench-status{gap:var(--bench-s)}}
+
+.benchmark-lab .bench-rank-group th{text-align:left;background:var(--bench-bg);font-size:11px;letter-spacing:.015em;padding:8px}.benchmark-lab .bench-unverified{color:var(--bench-warn)}
+
+.bench-validation-summary{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--bench-muted)}.bench-validation-summary:empty{display:none}.bench-constraints th:not(:first-child){text-align:right}.bench-constraints td{padding:6px 9px}
+
+.bench-panel:not(.bench-constraints) .bench-table-wrap table{min-width:1000px}.bench-constraints table{min-width:520px}

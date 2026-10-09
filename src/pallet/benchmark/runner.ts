@@ -1,3 +1,7 @@
+import { hardResults } from './hardConstraints';
+import { EVALUATOR_VERSION } from './version';
+import { verticalAxis } from '../orientations';
+import { estimatedPathSeconds } from './motionMetrics';
 import { ArrivalEnvironment,advance,metrics } from '../environment';
 import { inspectConstraints } from '../constraints';
 import { evaluatePattern } from '../patternEvaluation';
@@ -31,22 +35,22 @@ export function auditProposal(input:PlanningInput,a:Analysis){
  c.placement=checked.placement;c.path=checked.path;
  return [...(!c.valid?['유효하지 않은 후보 선택']:[]),...checked.reasons];
 }
-export function trialIdentity(c:BenchmarkConfig,spec:TrialSpec){const s=buildCase(c.scenario,spec.caseId,spec.seed);return {s,hash:fingerprint({scenario:s,settings:c.settings,decisionMs:c.decisionMs,trialMs:c.trialMs,probeLimit:c.probeLimit,caseId:spec.caseId})};}
+export function trialIdentity(c:BenchmarkConfig,spec:TrialSpec){const s=buildCase(c.scenario,spec.caseId,spec.seed);return {s,hash:fingerprint({scenario:s,settings:c.settings,decisionMs:c.decisionMs,trialMs:c.trialMs,probeLimit:c.probeLimit,caseId:spec.caseId,warmupRuns:c.warmupRuns??1,robotAccelerationMmS2:c.robotAccelerationMmS2??null})};}
 export function failedTrial(c:BenchmarkConfig,spec:TrialSpec,reason:string,outcome:TrialRow['outcome']='timeout'):TrialRow{
  const {s,hash}=trialIdentity(c,spec),env=new ArrivalEnvironment(s);
- return {id:`${spec.caseId}:${spec.seed}:${spec.algorithm}`,algorithm:spec.algorithm,scope:getAlgorithm(spec.algorithm).scope,caseId:spec.caseId,seed:spec.seed,episode:spec.episode,fingerprint:hash,arrivalIds:Array.from({length:env.total},(_,i)=>env.current(i)!.id),outcome,reason,values:{},proposalViolations:{},candidateRejections:{},exceptions:[],strength:'missing',robot:s.constraints.robotMode==='ideal'?'unverified':'proxy',pallet:s.pallet,constraints:s.constraints};
+ return {evaluatorVersion:EVALUATOR_VERSION,algorithmVersion:getAlgorithm(spec.algorithm).version??'미지정',id:`${spec.caseId}:${spec.seed}:${spec.algorithm}`,algorithm:spec.algorithm,scope:getAlgorithm(spec.algorithm).scope,caseId:spec.caseId,seed:spec.seed,episode:spec.episode,fingerprint:hash,arrivalIds:Array.from({length:env.total},(_,i)=>env.current(i)!.id),outcome,reason,values:{},proposalViolations:{},candidateRejections:{},exceptions:[],strength:'missing',robot:s.constraints.robotMode==='ideal'?'unverified':'proxy',pallet:s.pallet,constraints:s.constraints};
 }
 export async function runTrial(c:BenchmarkConfig,spec:TrialSpec,hooks:Hooks={},definition:AlgorithmEntry=getAlgorithm(spec.algorithm)):Promise<TrialRow>{
  const now=hooks.now??(()=>performance.now()),started=now(),{s,hash}=trialIdentity(c,spec),auditEnv=new ArrivalEnvironment(s);
  // Full arrival trace is an evaluator-only audit artifact. It NEVER crosses the input boundary.
  const arrivals=Array.from({length:auditEnv.total},(_,i)=>auditEnv.current(i)!);
- const row:TrialRow={id:`${spec.caseId}:${spec.seed}:${spec.algorithm}`,algorithm:spec.algorithm,scope:definition.scope,caseId:spec.caseId,seed:spec.seed,episode:spec.episode,fingerprint:hash,arrivalIds:arrivals.map(o=>o.id),outcome:'partial',reason:'',values:{},proposalViolations:{},candidateRejections:{},exceptions:[],strength:'explicit',robot:s.constraints.robotMode==='ideal'?'unverified':'proxy',trace:[],pallet:s.pallet,constraints:s.constraints};
+ const row:TrialRow={evaluatorVersion:EVALUATOR_VERSION,algorithmVersion:definition.version??'미지정',proposalReasons:[],finalReasons:undefined,id:`${spec.caseId}:${spec.seed}:${spec.algorithm}`,algorithm:spec.algorithm,scope:definition.scope,caseId:spec.caseId,seed:spec.seed,episode:spec.episode,fingerprint:hash,arrivalIds:arrivals.map(o=>o.id),outcome:'partial',reason:'',values:{},proposalViolations:{},candidateRejections:{},exceptions:[],strength:'explicit',robot:s.constraints.robotMode==='ideal'?'unverified':'proxy',trace:[],pallet:s.pallet,constraints:s.constraints};
  if(definition.scope==='offline'){
   if(s.events.length||spec.caseId==='palletChange'){row.outcome='error';row.reason='이 오프라인 어댑터는 예외 이벤트 비교를 지원하지 않습니다.';return row;}
   s.supplyMode='stock-select';
  }
  const env=new ArrivalEnvironment(s),times:number[]=[],margins:number[]=[],tipping:number[]=[];let frame=emptyFrame(),validInTime=0,candidates=0,proposed=0,robotFailures=0,lastInput:PlanningInput|null=null,changed=false;
- const addViolation=(reasons:string[])=>{for(const type of new Set(reasons.map(violationType)))row.proposalViolations[type]=(row.proposalViolations[type]??0)+1;};
+ const addViolation=(reasons:string[])=>{row.proposalReasons!.push(...reasons);for(const type of new Set(reasons.map(violationType)))row.proposalViolations[type]=(row.proposalViolations[type]??0)+1;};
  try{
  while(!frame.blocked&&frame.processed<env.total){
   if(hooks.aborted?.()){row.outcome='error';row.reason='실행 취소';break;}
@@ -90,15 +94,19 @@ export async function runTrial(c:BenchmarkConfig,spec:TrialSpec,hooks:Hooks={},d
  const auditStart=now(),m=metrics(frame,s),audit=evaluatePattern(frame,s),normal=arrivals.filter(o=>o.status!=='damaged'&&o.status!=='missing'),target=normal.length;
  if(audit.reasons.length&&row.outcome!=='environment-blocked'){addViolation(audit.reasons);row.outcome='constraint-rejected';row.reason=audit.reasons.join(' / ');}
  if(!['constraint-rejected','timeout','error','environment-blocked'].includes(row.outcome))row.outcome=m.count===target&&frame.processed===env.total?'complete':m.count?'partial':'no-placement';
- const explicit=(o:Observation)=>o.packaging!==undefined||o.maxLoadKg!==undefined||o.maxLoadByAxis?.h!==undefined;
+ const finiteLoad=(n:number|undefined)=>n!==undefined&&Number.isFinite(n)&&n>=0;
+ const explicit=(o:Observation)=>{const axis=verticalAxis(frame.placements.find(p=>p.id===o.id)?.orientation??0);return o.packaging?finiteLoad(o.packaging.maxTopLoad):finiteLoad(o.maxLoadByAxis?.[axis])||(finiteLoad(o.maxLoadKg)&&o.maxLoadSource!=='synthetic');};
  const missing=normal.filter(o=>!explicit(o));row.strength=missing.length?(missing.some(o=>materialInfo(o,s.constraints.stability).capacity===null)?'missing':'assumed'):'explicit';
  const support=frame.placements.map(p=>p.supportRatio),robot=row.robot==='proxy',future=lastInput&&c.probeLimit>0&&now()-started<c.trialMs?remainingSites({...lastInput,current:lastInput.current,remaining:env.remaining(frame),settings:{...lastInput.settings,reserveProbes:c.probeLimit}},frame.placements):null;
+ const workTimes=row.trace!.flatMap(t=>t.placement&&t.path?[estimatedPathSeconds(t.path,s.constraints.gripper.speed,c.robotAccelerationMmS2)]:[]),workSeconds=robot&&m.count&&workTimes.length===m.count&&workTimes.every(v=>v!==null&&Number.isFinite(v))?workTimes.reduce<number>((a,b)=>a+b!,0):null;
  const exceptionSeen=row.exceptions.filter(e=>e.encountered),replans=exceptionSeen.flatMap(e=>e.ms===null?[]:[e.ms]);
- row.values={count:m.count,completion:target?100*m.count/target:null,utilization:100*m.utilization,unplaced:Math.max(0,target-m.count),unplacedVolume:Math.max(0,normal.reduce((n,o)=>n+volume(o.size),0)-m.volume)/1e9,height:m.count?m.height:null,pallets:null,remainingFit:future?100*future.fitFraction:null,spaceOpportunity:future?100*future.opportunity:null,
+ row.finalReasons=[...audit.reasons];row.hardConstraints=hardResults(row);
+ const exceptionRate=(kind:string)=>{const events=exceptionSeen.filter(e=>e.kind===kind);return events.length?100*events.filter(e=>e.passed).length/events.length:null;};
+ row.values={residualVolume:Math.max(0,s.pallet.width*s.pallet.depth*s.pallet.maxHeight-m.volume),count:m.count,completion:target?100*m.count/target:null,utilization:100*m.utilization,unplaced:Math.max(0,target-m.count),unplacedVolume:Math.max(0,normal.reduce((n,o)=>n+volume(o.size),0)-m.volume)/1e9,height:m.count?m.height:null,pallets:null,remainingFit:future?100*future.fitFraction:null,spaceOpportunity:future?100*future.opportunity:null,
   comZ:m.count?m.center.z:null,comOffset:m.count?Math.hypot(m.center.x-s.pallet.width/2,m.center.y-s.pallet.depth/2):null,supportMean:support.length?100*support.reduce((a,b)=>a+b,0)/support.length:null,supportMin:support.length?100*Math.min(...support):null,imbalance:m.count?100*m.imbalance:null,minMargin:margins.length?Math.min(...margins):null,tippingG:tipping.length?Math.min(...tipping):null,loadViolations:row.strength==='explicit'?(row.proposalViolations.load??0):null,unknownStrength:missing.length,physicsSuccess:null,
-  meanMs:times.length?times.reduce((a,b)=>a+b,0)/times.length:null,maxMs:times.length?Math.max(...times):null,p95Ms:percentile(times,.95),p99Ms:percentile(times,.99),totalMs:times.reduce((a,b)=>a+b,0),deadlineRate:times.length?100*validInTime/times.length:null,workSeconds:robot&&m.count?m.workSeconds:null,distanceM:robot&&m.count?m.distanceM:null,throughput:robot&&m.workSeconds>0?3600*m.count/m.workSeconds:null,candidates,evaluationMs:now()-auditStart,
-  orderUtilization:100*m.utilization,orderSuccess:row.outcome==='complete'?100:0,regret:null,futureFit:future?100*future.fitFraction:null,
-  reachProxy:robot&&proposed?100*(proposed-robotFailures)/proposed:null,robotCollisions:robot?row.proposalViolations['robot-path']??0:null,payloadViolations:robot?row.proposalViolations.payload??0:null,graspSuccess:null,ikSuccess:null,executionSuccess:robot?(row.outcome==='complete'?100:0):null,
-  exceptionSuccess:exceptionSeen.length?100*exceptionSeen.filter(e=>e.passed).length/exceptionSeen.length:null,replanMs:replans.length?replans.reduce((a,b)=>a+b,0)/replans.length:null,exceptionRetention:null,palletRecovery:row.exceptions.find(e=>e.kind==='palletChange')?.passed===undefined?null:row.exceptions.find(e=>e.kind==='palletChange')!.passed?100:0};
+  meanMs:times.length?times.reduce((a,b)=>a+b,0)/times.length:null,maxMs:times.length?Math.max(...times):null,p95Ms:percentile(times,.95),p99Ms:percentile(times,.99),totalMs:times.reduce((a,b)=>a+b,0),deadlineRate:times.length?100*validInTime/times.length:null,workSeconds,distanceM:robot&&m.count?m.distanceM:null,throughput:workSeconds!==null&&workSeconds>0?3600*m.count/workSeconds:null,candidates,evaluationMs:now()-auditStart,
+  orderUtilization:['random','mixed'].includes(spec.caseId)?100*m.utilization:null,orderCompletion:['random','mixed'].includes(spec.caseId)&&target?100*m.count/target:null,orderSuccess:['random','mixed'].includes(spec.caseId)?(row.outcome==='complete'?100:0):null,regret:null,futureFit:future?100*future.fitFraction:null,
+  reachProxy:robot&&proposed?100*(proposed-robotFailures)/proposed:null,robotCollisions:robot?row.hardConstraints.robotCollision.violations:null,payloadViolations:robot?row.proposalViolations.payload??0:null,graspSuccess:null,ikSuccess:null,executionSuccess:robot?(row.outcome==='complete'?100:0):null,
+  damagedRecovery:exceptionRate('damaged'),missingRecovery:exceptionRate('missing'),resizeRecovery:exceptionRate('resize'),exceptionSuccess:exceptionSeen.length?100*exceptionSeen.filter(e=>e.passed).length/exceptionSeen.length:null,replanMs:replans.length?replans.reduce((a,b)=>a+b,0)/replans.length:null,exceptionRetention:null,palletRecovery:row.exceptions.find(e=>e.kind==='palletChange')?.passed===undefined?null:row.exceptions.find(e=>e.kind==='palletChange')!.passed?100:0};
  hooks.progress?.(row);return row;
 }

@@ -9,7 +9,7 @@ export function buildCase(base:Scenario,caseId:CaseId,seed:number){
  if(caseId==='identical'){s.types=structuredClone(scenario('identical').types);s.types[0].maxLoadKg=100;}
  if(caseId==='smallFirst')s.arrival.pattern='large-late';
  if(caseId==='largeFirst'){s.types.sort((a,b)=>volume(b.size)-volume(a.size));s.arrival.pattern='ordered';}
- if(caseId==='heavyLate')s.arrival.pattern='heavy-late';
+ if(caseId==='heavyLate'||caseId==='lightFirst')s.arrival.pattern='heavy-late';
  if(caseId==='random')s.arrival.pattern='random-draw';
  const eventStep=Math.min(3,s.types.reduce((n,t)=>n+t.quantity,0));
  if(caseId==='missing'||caseId==='damaged')s.events=[{step:eventStep,kind:caseId}];
@@ -17,6 +17,8 @@ export function buildCase(base:Scenario,caseId:CaseId,seed:number){
  return s;
 }
 export function validateBenchmark(c:BenchmarkConfig){
+ if(!Number.isInteger(c.warmupRuns??1)||(c.warmupRuns??1)<0||(c.warmupRuns??1)>5)throw Error('워밍업은 알고리즘별 0~5회입니다.');
+ if(c.robotAccelerationMmS2!=null&&(!Number.isFinite(c.robotAccelerationMmS2)||c.robotAccelerationMmS2<=0))throw Error('TCP 가속도 가정은 양수 또는 미지정입니다.');
  if(!Number.isInteger(c.repeats)||c.repeats<1||c.repeats>1000)throw Error('반복 횟수는 1~1000회입니다.');
  if(!c.algorithms.length||new Set(c.algorithms).size!==c.algorithms.length)throw Error('중복 없이 알고리즘을 선택하세요.');c.algorithms.forEach(getAlgorithm);
  if(!c.cases.length||c.cases.some(v=>!(v in CASES))||new Set(c.cases).size!==c.cases.length)throw Error('시나리오 선택을 확인하세요.');
