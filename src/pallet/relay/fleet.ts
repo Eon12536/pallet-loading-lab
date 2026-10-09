@@ -17,7 +17,7 @@ export function robotKind(p:Pallet,index:number):'floor'|'ceiling'{
  return Math.floor((index+1)*f.floorCount/f.count)>Math.floor(index*f.floorCount/f.count)?'floor':'ceiling';
 }
 export function withFleet(s:Scenario,f:RobotLayout):Scenario {return {...s,pallet:{...s.pallet,robotLayout:validateFleet(f)}};}
-export function gantryEnvelope(p:Pallet){return {xMin:p.width/2-1400,xMax:p.width/2+1400,yMin:-2100,yMax:p.depth+350,zMin:0,zMax:3400,railZ:3900};}
+export function gantryEnvelope(p:Pallet){return {xMin:p.palletsPerRobot===2?-p.width-650:p.width/2-1400,xMax:p.width/2+1400,yMin:-2100,yMax:p.depth+350,zMin:0,zMax:3400,railZ:3900};}
 export function gantryReach(p:Pallet,t:Vec3,n:Vec3,toolHeight:number){const e=gantryEnvelope(p);return [t.x,t.y,t.z].every(Number.isFinite)&&Math.abs(n.x)<1e-6&&Math.abs(n.y)<1e-6&&n.z>1-1e-6&&t.x>=e.xMin&&t.x<=e.xMax&&t.y>=e.yMin&&t.y<=e.yMax&&t.z>=e.zMin&&t.z+toolHeight<=e.zMax;}
 export function robotReach(p:Pallet,index:number,t:Vec3,n:Vec3,toolHeight:number){return robotKind(p,index)==='ceiling'?gantryReach(p,t,n,toolHeight):Math.abs(n.x)<1e-6&&Math.abs(n.y)<1e-6&&n.z>1-1e-6&&solveRobotArm(t,n,toolHeight).reachable;}
 export function robotObservation(p:Pallet,index:number,b:Observation):Observation{// Both cell mechanisms have a vertical tool plus yaw, with no independent wrist pitch/roll.

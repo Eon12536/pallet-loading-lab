@@ -1,3 +1,4 @@
+import {mainPoint,tailGeometry} from './conveyorTail';
 import { beltBounds, CONVEYOR } from './conveyor';
 import { cellPose } from './layout';
 import { SCANNER_OFFSET } from './intake';
@@ -16,7 +17,7 @@ export function branchAvailable(w: RelayWorld, robot: number, box: RelayBox) {
 }
 export function branchPosition(b: RelayBox, time: number, speed: number, p: Pallet): Vec3 {
   const t = b.flow!.transport!, arc = Math.min(t.limit, t.arc + Math.max(0, time - t.at) * speed);
-  return t.kind === 'main' ? { x: beltBounds(p).left + arc, y: mainY, z: CONVEYOR.deck } : { x: cellPose(t.robot!, p).x, y: mainY + arc, z: CONVEYOR.deck };
+  return t.kind === 'main' ? mainPoint(p, arc) : { x: cellPose(t.robot!, p).x, y: mainY + arc, z: CONVEYOR.deck };
 }
 export function pusherBoxPosition(from: Vec3, target: Vec3, elapsed: number): Vec3 {
   // Kinematic side stroke then gravity reject rollers; not a contact-force model.
@@ -45,7 +46,7 @@ export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet
   const pushing = w.boxes.filter(b => b.status === 'rejecting' && b.flow?.reject && time - b.flow.reject.startedAt < BRANCH.pushSeconds);
   const main = [...active.filter(b => b.flow!.transport!.kind === 'main'), ...pushing].sort((a, b) => b.flow!.transport!.arc - a.flow!.transport!.arc);
   for (const b of main) {
-    const t = b.flow!.transport!, half = footprint(b) / 2, end = beltBounds(p).right - beltBounds(p).left - half;
+    const t = b.flow!.transport!, end = beltBounds(p).right - beltBounds(p).left + tailGeometry(p).length;
     let limit = Math.min(end, ahead ? ahead.flow!.transport!.arc - (footprint(ahead) + footprint(b)) / 2 - BRANCH.gap : Infinity);
     if (b.status === 'rejecting') { t.limit = t.arc; t.at = time; ahead = b; continue; }
     if (!b.scan) limit = Math.min(limit, SCANNER_OFFSET + b.observation.size.w / 2);
@@ -58,7 +59,14 @@ export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet
       if (q.arc < clearance && t.arc < fork) limit = Math.min(limit, fork - clearance);
     }
     if (limit < t.arc - 1e-6) throw Error('메인 벨트 대기열 간격 위반');
-    t.arc = Math.min(limit, t.arc + travel); t.limit = limit; t.at = time;
+    let proposed = Math.min(limit, t.arc + travel);
+    // Chord distances, rather than arc spacing alone, protect the rounded merge.
+    if (proposed > beltBounds(p).right - beltBounds(p).left - 1500) {
+      const obstacles = active.filter(q => q !== b && (q.flow!.transport!.kind === 'branch' || q.flow!.transport!.arc > t.arc));
+      const clear = (arc: number) => { const pt = mainPoint(p, arc); return obstacles.every(q => { const other = branchPosition(q, time, w.stream!.speed, p); return Math.hypot(pt.x - other.x, pt.y - other.y) >= (footprint(q) + footprint(b)) / 2 + BRANCH.gap - 1e-6; }); };
+      if (!clear(proposed)) { let low = t.arc, high = proposed; for (let n = 0; n < 16; n++) { const mid = (low + high) / 2; if (clear(mid)) low = mid; else high = mid; } proposed = low; limit = Math.min(limit, proposed); }
+    }
+    t.arc = proposed; t.limit = limit; t.at = time;
     if (b.scan?.verdict === 'damaged' && t.arc >= BRANCH.pusherOffset - .01 && !w.boxes.some(q => q.status === 'rejecting')) {
       b.status = 'rejecting'; b.flow!.reject = { startedAt: time, from: branchPosition(b, time, w.stream!.speed, p) };
       b.flow!.lastReason = '입구 스캔 불량 · 분기 전 측면 푸셔 배출'; w.revision++;
@@ -72,9 +80,9 @@ export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet
       }
     } else if (t.robot === undefined && b.scan?.verdict === 'normal' && !t.bypass && t.arc >= BRANCH.pusherOffset + 500 - .01) {
       t.waitingSince ??= time;
-      if (time - t.waitingSince >= BRANCH.waitSeconds) { t.bypass = true; b.flow!.lastReason = '중앙 배차 대기 상한 · 서브 진입 없이 출구 처리'; w.revision++; }
+      if (time - t.waitingSince >= BRANCH.waitSeconds) { t.bypass = true; b.flow!.lastReason = '중앙 배차 대기 상한 · 곡선 끝단을 따라 마지막 서브로 재검토'; w.revision++; }
     }
-    if (b.status === 'belt' && t.kind === 'main' && t.arc >= end - .01) { b.status = 'outfeed'; b.flow!.lastReason = '유효 서브 배차 없음 · 메인 벨트 출구 대기'; w.revision++; }
+    if (b.status === 'belt' && t.kind === 'main' && t.arc >= end - .01) { t.kind = 'branch'; t.robot = tailGeometry(p).robot; t.arc = BRANCH.length; t.limit = BRANCH.length; t.at = time; t.waitingSince = time; t.attempts = 0; b.owner = t.robot; b.flow!.lastReason = '곡선 끝단 합류 · 마지막 로봇의 두 팔레트 재검토'; w.revision++; ahead = { ...b, flow: { ...b.flow!, transport: { ...t, kind: 'main', arc: end } } }; continue; }
     ahead = b;
   }
 }

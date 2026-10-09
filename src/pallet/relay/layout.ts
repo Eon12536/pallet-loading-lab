@@ -6,8 +6,9 @@ export const ROBOT_COUNT=4;
 export const RELAY_COLORS=['#73cdb8','#e7b968','#84aef0','#cf9be1','#f39b83','#92d37e','#79d4e4','#e19cbd'];
 export const nextRobot=(i:number,count=ROBOT_COUNT)=>(i+1)%count;
 export const previousRobot=(i:number,count=ROBOT_COUNT)=>(i+count-1)%count;
-export const cellRadius=(p:Pallet)=>Math.max(3600,p.width+2200)*Math.max(.3,(robotCount(p)-1)/2);
-export function cellPose(index:number,p:Pallet){return {x:(index-(robotCount(p)-1)/2)*Math.max(3600,p.width+2200),y:p.depth/2+1000,angle:0};}
+export const stationPitch=(p:Pallet)=>Math.max(3600,p.width+2200,p.palletsPerRobot===2?2*p.width+600:0);
+export const cellRadius=(p:Pallet)=>stationPitch(p)*Math.max(.3,(robotCount(p)-1)/2);
+export function cellPose(index:number,p:Pallet){return {x:(index-(robotCount(p)-1)/2)*stationPitch(p),y:p.depth/2+1000,angle:0};}
 export function toWorld(v:Vec3,index:number,p:Pallet):Vec3 {const c=cellPose(index,p),x=v.x-p.width/2,y=v.y-p.depth/2;return {x:c.x+x*Math.cos(c.angle)-y*Math.sin(c.angle),y:c.y+x*Math.sin(c.angle)+y*Math.cos(c.angle),z:v.z};}
 export function toLocal(v:Vec3,index:number,p:Pallet):Vec3 {const c=cellPose(index,p),x=v.x-c.x,y=v.y-c.y;return {x:p.width/2+x*Math.cos(c.angle)+y*Math.sin(c.angle),y:p.depth/2-x*Math.sin(c.angle)+y*Math.cos(c.angle),z:v.z};}
 export const queueCenter=(i:number,p:Pallet)=>toWorld({x:-500,y:525,z:0},i,p);

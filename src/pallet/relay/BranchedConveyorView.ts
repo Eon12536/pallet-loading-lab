@@ -1,5 +1,6 @@
+import {tailGeometry,tailPoint} from './conveyorTail';
 /* Hallmark · factory component · existing industrial scene tokens.
- * Pre-emit critique: P4 H4 E4 S5 R5 V4. Main trunk / sub-lines / inlet inspection. */
+ * Pre-emit critique: P4 H4 E5 S5 R5 V4. Main trunk / sub-lines / rounded final merge / inlet inspection. */
 import * as THREE from 'three';
 import { beltBounds, CONVEYOR } from './conveyor';
 import { BRANCH, mainY } from './branchedConveyor';
@@ -38,6 +39,20 @@ export function createBranchedConveyorView(p: Pallet) {
     cube(group, [.92, .03, .065], [x, deck + .05, CONVEYOR.front / 1000 + .45], sub);
     cube(group, [.09, .12, .08], [x + .51, deck + .08, CONVEYOR.front / 1000], steel);
   }
+  // Smooth horizontal ribbon with rails: the same arc-length path as carton transport.
+  const tail = new THREE.Group(); tail.name = 'rounded-end-to-last-sub'; group.add(tail);
+  const curve = tailGeometry(p), vertices: number[] = [], indices: number[] = [], edges = [[], []] as THREE.Vector3[][];
+  const steps = Math.ceil(curve.length / 90);
+  for (let i = 0; i <= steps; i++) {
+    const arc = curve.length * i / steps, pt = tailPoint(p, arc), a = tailPoint(p, Math.max(0, arc - 1)), b = tailPoint(p, Math.min(curve.length, arc + 1)), length = Math.hypot(b.x - a.x, b.y - a.y), nx = -(b.y - a.y) / length, ny = (b.x - a.x) / length;
+    for (const [j, sign] of [-1, 1].entries()) { const x = (pt.x + nx * CONVEYOR.width / 2 * sign) / 1000, z = (pt.y + ny * CONVEYOR.width / 2 * sign) / 1000; vertices.push(x, deck, z); edges[j].push(new THREE.Vector3(x, deck + .05, z)); }
+    if (i) { const n = i * 2; indices.push(n - 2, n - 1, n, n - 1, n + 1, n); }
+    if (i % 3 === 0) { const roller = cube(tail, [.012, .008, width - .04], [pt.x / 1000, deck + .005, pt.y / 1000], steel); roller.rotation.y = -Math.atan2(b.y - a.y, b.x - a.x); }
+    if (i % 14 === 0) for (const sign of [-1, 1]) cube(tail, [.065, deck + .32, .065], [(pt.x + nx * 350 * sign) / 1000, (deck - .4) / 2, (pt.y + ny * 350 * sign) / 1000], steel);
+  }
+  const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
+  const surface = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({color:TWIN_ROBOT_PALETTE.dark,roughness:.85,side:THREE.DoubleSide})); surface.receiveShadow = true; tail.add(surface);
+  for (const points of edges) tail.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), steps, .035, 6, false), sub));
   const scanner = new THREE.Group(); scanner.name = 'main-inlet-u-scanner'; group.add(scanner);
   const scanX = (bounds.left + SCANNER_OFFSET) / 1000;
   for (const side of [-1, 1]) cube(scanner, [.22, 1.15, .13], [scanX, deck + .575, y + side * .58], rubber);

@@ -1,3 +1,4 @@
+import {allPallets,palletToWorld,worldToPallet,palletToRobot} from './palletStations';
 import {robotReach} from './fleet';
 import { beltPickup,beltStation,sourcePickup,CONVEYOR } from './conveyor';
 import { Vector3 } from 'three';
@@ -46,7 +47,7 @@ export function actionSweeps(s:Scenario,w:RelayWorld,a:RelayAction){
  if(a.segments)for(const p of a.segments){const rotating=Math.abs(p.yawTo-p.yawFrom)>1e-6,diag=Math.hypot(box.size.w,box.size.d);
   add(p.from,p.to,p.carrying,p.carrying?(rotating?diag:Math.abs(Math.cos(p.yawFrom))*box.size.w+Math.abs(Math.sin(p.yawFrom))*box.size.d):g.width,p.carrying?(rotating?diag:Math.abs(Math.sin(p.yawFrom))*box.size.w+Math.abs(Math.cos(p.yawFrom))*box.size.d):g.depth,box.size.h);
  }else if(a.path){for(let i=1;i<a.path.points.length;i++){const u=a.path.points[i-1],v=a.path.points[i],tilted=a.path.fixedGrasp,diag=tilted?Math.hypot(box.size.w,box.size.d,box.size.h):Math.hypot(box.size.w,box.size.d);
-  add(toWorld(u.tcp,a.robot,s.pallet),toWorld(v.tcp,a.robot,s.pallet),v.carrying,v.carrying?diag:Math.hypot(g.width,g.depth),v.carrying?diag:Math.hypot(g.width,g.depth),tilted?diag:box.size.h);
+  add(palletToWorld(u.tcp,a.robot,s.pallet,a.pallet),palletToWorld(v.tcp,a.robot,s.pallet,a.pallet),v.carrying,v.carrying?diag:Math.hypot(g.width,g.depth),v.carrying?diag:Math.hypot(g.width,g.depth),tilted?diag:box.size.h);
  }}return result;
 }
 export function motionsConflict(s:Scenario,w:RelayWorld,a:RelayAction,b:RelayAction){
@@ -70,13 +71,13 @@ export function inspectMotion(s:Scenario,w:RelayWorld,a:RelayAction):string[]{
  if(a.segments){for(const seg of a.segments){if(Math.max(seg.from.z,seg.to.z)+g.height>s.constraints.workspace.zMax)reasons.push('작업 높이 초과');
   for(let k=0;k<=12;k++){const t=k/12,p={x:seg.from.x+(seg.to.x-seg.from.x)*t,y:seg.from.y+(seg.to.y-seg.from.y)*t,z:seg.from.z+(seg.to.z-seg.from.z)*t};if(!robotReach(s.pallet,a.robot,toLocal(p,a.robot,s.pallet),{x:0,y:0,z:1},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}}
  }}else if(a.path){for(let i=1;i<a.path.points.length;i++){const u=a.path.points[i-1],v=a.path.points[i];for(let k=0;k<=12;k++){const t=k/12,p={x:u.tcp.x+(v.tcp.x-u.tcp.x)*t,y:u.tcp.y+(v.tcp.y-u.tcp.y)*t,z:u.tcp.z+(v.tcp.z-u.tcp.z)*t},q=poseQuaternion(u.pose??(u.yaw===90?90:0)).slerp(poseQuaternion(v.pose??(v.yaw===90?90:0)),t),normal=new Vector3(0,1,0).applyQuaternion(q);
-   if(!robotReach(s.pallet,a.robot,p,{x:normal.x,y:normal.z,z:normal.y},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}
+   if(!robotReach(s.pallet,a.robot,palletToRobot(p,s.pallet,a.pallet),{x:normal.x,y:normal.z,z:normal.y},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}
   }} }
  // Own-pallet paths are checked by inspectConstraints; additional cells/pads are obstacles here.
- const objects=w.cells.flatMap((c,i)=>a.segments||i!==a.robot?c.placements.map(p=>({box:p,cell:i})):[]);
- w.pads.forEach((pad,i)=>{if(!pad.boxId||!pad.arrived||i===a.pad)return;const b=w.boxes.find(b=>b.observation.id===pad.boxId)!.observation,source=padPickup(s,b,i);objects.push({box:{position:source,size:b.size} as Placement,cell:nextRobot(i)});});
- const segments=a.segments?.map(p=>({from:p.from,to:p.to,carrying:p.carrying,tilted:false}))||a.path!.points.slice(1).map((v,i)=>({from:toWorld(a.path!.points[i].tcp,a.robot,s.pallet),to:toWorld(v.tcp,a.robot,s.pallet),carrying:v.carrying,tilted:!!a.path!.fixedGrasp}));
- if(segments.some(v=>{const radius=(v.carrying?(v.tilted?Math.hypot(box.size.w,box.size.d,box.size.h):Math.hypot(box.size.w,box.size.d)):Math.hypot(g.width,g.depth))/2+g.margin;return objects.some(o=>segmentBox(toLocal(v.from,o.cell,s.pallet),toLocal(v.to,o.cell,s.pallet),o.box,radius,v.carrying?(v.tilted?2*radius:box.size.h):0,g.height));}))reasons.push('다른 작업셀 / 벨트 픽업 구역과 운반 경로 간섭');
+ const objects=allPallets(w).flatMap(({cell,robot,pallet})=>a.segments||robot!==a.robot||pallet!==(a.pallet??0)?cell.placements.map(p=>({box:p,cell:robot,pallet})):[]);
+ w.pads.forEach((pad,i)=>{if(!pad.boxId||!pad.arrived||i===a.pad)return;const b=w.boxes.find(b=>b.observation.id===pad.boxId)!.observation,source=padPickup(s,b,i);objects.push({box:{position:source,size:b.size} as Placement,cell:nextRobot(i),pallet:0});});
+ const segments=a.segments?.map(p=>({from:p.from,to:p.to,carrying:p.carrying,tilted:false}))||a.path!.points.slice(1).map((v,i)=>({from:palletToWorld(a.path!.points[i].tcp,a.robot,s.pallet,a.pallet),to:palletToWorld(v.tcp,a.robot,s.pallet,a.pallet),carrying:v.carrying,tilted:!!a.path!.fixedGrasp}));
+ if(segments.some(v=>{const radius=(v.carrying?(v.tilted?Math.hypot(box.size.w,box.size.d,box.size.h):Math.hypot(box.size.w,box.size.d)):Math.hypot(g.width,g.depth))/2+g.margin;return objects.some(o=>segmentBox(worldToPallet(v.from,o.cell,s.pallet,o.pallet),worldToPallet(v.to,o.cell,s.pallet,o.pallet),o.box,radius,v.carrying?(v.tilted?2*radius:box.size.h):0,g.height));}))reasons.push('다른 작업셀 / 벨트 픽업 구역과 운반 경로 간섭');
  return [...new Set(reasons)];
 }
 export function receiveConstraints(s:Scenario){

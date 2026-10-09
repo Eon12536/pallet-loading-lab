@@ -1,6 +1,6 @@
 import type {FlowProposal} from './streamPlanner';
 /** Central assignment owns box/robot uniqueness. Local candidate generation is only a feasibility service. */
-export interface DispatchSummary {mode:'central';offered:number;commands:number;visited:number;capped:boolean;assignments:{robot:number;boxId:string;cellVersion:number}[]}
+export interface DispatchSummary {mode:'central';offered:number;commands:number;visited:number;capped:boolean;assignments:{pallet?:number;robot:number;boxId:string;cellVersion:number}[]}
 export function assignCentrally(offers:FlowProposal[],busy:number[]=[],maxNodes=512){
  const groups=new Map<number,FlowProposal[]>();
  for(const p of offers){if(busy.includes(p.robot)||!p.candidates.length)continue;const list=groups.get(p.robot)||[];if(!list.some(v=>v.boxId===p.boxId))list.push(p);groups.set(p.robot,list);}
@@ -18,6 +18,6 @@ export function assignCentrally(offers:FlowProposal[],busy:number[]=[],maxNodes=
  }
  visit(0,[],new Set(),0);
  const commands=best.map(p=>({...p,reason:'중앙 배정 · '+p.reason}));
- const dispatch:DispatchSummary={mode:'central',offered:[...groups.values()].reduce((n,v)=>n+v.length,0),commands:commands.length,visited,capped,assignments:commands.map(p=>({robot:p.robot,boxId:p.boxId,cellVersion:p.cellVersion}))};
+ const dispatch:DispatchSummary={mode:'central',offered:[...groups.values()].reduce((n,v)=>n+v.length,0),commands:commands.length,visited,capped,assignments:commands.map(p=>({robot:p.robot,pallet:p.pallet,boxId:p.boxId,cellVersion:p.cellVersion}))};
  return{commands,dispatch};
 }

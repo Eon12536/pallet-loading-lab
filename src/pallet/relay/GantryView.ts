@@ -15,13 +15,13 @@ export function createGantryView(p:Pallet){
   // Short hangers explicitly indicate ceiling mounting, without floor pedestals.
   for(const y of [e.yMin-200,e.yMax+200])box([100,700,100],{x,y,z:e.railZ+430},steel);
  }
- const bridge=box([e.xMax-e.xMin+520,180,190],{x:p.width/2,y:0,z:e.railZ-140},body);
+ const bridge=box([e.xMax-e.xMin+520,180,190],{x:(e.xMin+e.xMax)/2,y:0,z:e.railZ-140},body);
  const carriage=box([320,250,360],{x:0,y:0,z:e.railZ-330},dark);
  const housing=box([170,850,170],{x:0,y:0,z:e.railZ-780},body);
  const mast=box([90,1000,90],{x:0,y:0,z:2000},steel);
  const flange=box([150,80,150],{x:0,y:0,z:0},dark);
  function update(target:Vec3,rotation:THREE.Quaternion,toolHeight:number,_model:RobotArmModel,pallet:Pallet){
-  bridge.position.copy(v({x:p.width/2,y:target.y,z:e.railZ-140}));
+  bridge.position.copy(v({x:(e.xMin+e.xMax)/2,y:target.y,z:e.railZ-140}));
   carriage.position.copy(v({x:target.x,y:target.y,z:e.railZ-330}));
   housing.position.copy(v({x:target.x,y:target.y,z:e.railZ-780}));
   const bottom=target.z+toolHeight+80,top=e.railZ-420;
