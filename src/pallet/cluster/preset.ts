@@ -11,3 +11,12 @@ export function clusterScenario(skus:6|8=6,order=0,robots=4):Scenario{
   constraints:{robotMode:'gripper',supportRatio:.85,contactTolerance:.5,horizontalGap:0,heavyRule:'off',stability:{maxSlenderness:2,minMarginRatio:.05,lateralAccelerationG:0,loadSafetyFactor:1.2,slendernessMode:'score'},gripper:{width:180,depth:160,height:160,mass:8,payload:38,margin:5,lift:180,speed:650,pickSeconds:.7,placeSeconds:.45,rotationSpeed:90},workspace:{xMin:-1400,xMax:1800,yMin:-600,yMax:1600,zMax:2600},reach:{baseX:-700,baseY:500,minRadius:0,maxRadius:2700},standingHeight:{enabled:false,maxRiseMm:100}},
   arrival:{seed:(skus===6?460000000:460100000)+order,pattern:'random-draw'},events:[],supplyMode:'arrival',intake:{damageRate:0,thresholdMm:8}};
 }
+// Supply extension for the dedicated demonstration, never the 30-box reproduction.
+export function clusterFleetDemo(order=0,robots=4,quantityPerSku=robots*10):Scenario{
+ if(!Number.isInteger(quantityPerSku)||quantityPerSku<5||quantityPerSku>80)throw Error('시연 공급량은 SKU당 5–80개 정수입니다.');
+ const s=clusterScenario(6,order,robots);
+ s.id='alps-cluster-fleet-demo';s.name=`ALPS 군집 다중 로봇 · 6 SKU / ${quantityPerSku*6}개 공급`;
+ s.types.forEach(t=>t.quantity=quantityPerSku);
+ s.clusterPreset!.demonstration={quantityPerSku};
+ return s;
+}
