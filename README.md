@@ -1,3 +1,9 @@
+# Conventional Pattern-Based Palletizing (HRPal-style Baseline)
+
+[고정 패턴·ALPS 비교 시뮬레이터](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=single-study&v=39#pallet) · [구현·검증·실측 비교](docs/CONVENTIONAL-PATTERN.md)
+
+Column / Interlocking / Brick 선택, 기존 공통 제약 검사, 외부 중립 패턴 어댑터를 추가했습니다. HRPal 비공개 알고리즘 복제가 아닙니다. 온라인 18개 알고리즘 180회와 패턴·회전 민감도 27회를 실행했습니다. 기존 연속 공정과 계획기를 유지합니다.
+
 # 중앙 오케스트레이션 · 도착 순서 개선 · v21
 
 - [중앙 배차 4대 로봇 시뮬레이터](https://pallet-loading-lab.eon3602.chatgpt.site/?palletDemo=compact&palletView=relay&v=21#pallet)

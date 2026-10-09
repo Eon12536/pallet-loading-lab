@@ -1,3 +1,5 @@
+import { planHrpalGridV1 } from './hrpalGridV1';
+import { planHrpalInferred,HRPAL_ASSUMPTION,HRPAL_NAME } from './hrpal';
 import { BUNDLED_ALGORITHM_VERSION } from './version';
 import { plan } from '../planner';
 import { candidateSet } from '../candidates';
@@ -9,6 +11,8 @@ import type { AlgorithmEntry } from './model';
 const entries=new Map<string,AlgorithmEntry>();
 /** Add a bundled adapter here; Worker and UI import this same registry. Never overwrite an ID. */
 export function registerAlgorithm(entry:AlgorithmEntry){if(!entry.id||entries.has(entry.id))throw Error('중복 알고리즘 ID');entries.set(entry.id,entry);}
+registerAlgorithm({id:'hrpal-inferred',name:HRPAL_NAME,version:'conventional-pattern/2',scope:'online',family:'공개 기능 기반 추정',description:HRPAL_ASSUMPTION,plan:planHrpalInferred});
+registerAlgorithm({id:'hrpal-grid-v1',name:'Legacy Grid Baseline (v1)',version:'inferred-grid-layer/1',scope:'online',family:'preserved baseline',description:'Previous grid baseline retained for reproducible comparison; not original HRPal.',plan:planHrpalGridV1});
 for(const [id,name] of Object.entries(ALGORITHM_NAMES))registerAlgorithm({id,name,version:BUNDLED_ALGORITHM_VERSION,scope:'online',family:'기존 공통 계획기',description:'현재 도착 박스·잔여 종류별 수량만 사용',plan:i=>plan({...i,algorithm:id as Algorithm,available:undefined})});
 registerAlgorithm({id:'blb',name:'Bottom-Left-Back',version:BUNDLED_ALGORITHM_VERSION,scope:'online',family:'기준선',description:'공통 제약 통과 후 z → y → x, 미래 평가 없음',plan:i=>{
  const start=performance.now(),r=candidateSet({...i,settings:{...i.settings,inventoryMode:'none'}}),valid=r.candidates.filter(c=>c.valid).sort((a,b)=>a.placement.position.z-b.placement.position.z||a.placement.position.y-b.placement.position.y||a.placement.position.x-b.placement.position.x);
