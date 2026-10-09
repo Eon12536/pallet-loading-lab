@@ -38,9 +38,9 @@ export interface SupportBalance { id:string;isBase:boolean;planeZ:number;mass:nu
 export interface PathPoint { label:string; tcp:Vec3; carrying:boolean;hold:number;yaw?:number;pose?:Orientation }
 export interface GripPath { graspFace?:string; points:PathPoint[];lengthMm:number;seconds:number;segmentSeconds:number[];model?:'ideal'|'gripper';fixedGrasp?:boolean }
 export type LegacyAlgorithm='bl'|'greedy'|'rollout';
-export type Algorithm=LegacyAlgorithm|StrategyId;
+export type Algorithm=LegacyAlgorithm|StrategyId|'random';
 export const LEGACY_ALGORITHMS:LegacyAlgorithm[]=['bl','greedy','rollout'];
-export const ALGORITHM_NAMES:Record<Algorithm,string>={bl:'기본 배치 · 잔량 검사',greedy:'제약 기반 평가 · Greedy',rollout:'남은 박스 고려 · Rollout','strategy-greedy':'Greedy · 현재 박스만',macs:'MACS','tetris-reserved':'Tetris Reserved Slot','dynamic-reservation':'Dynamic Reservation',lookahead:'Lookahead','future-hybrid':'Future-Aware Hybrid'};
+export const ALGORITHM_NAMES:Record<Algorithm,string>={random:'무작위 배치',bl:'기본 배치 · 잔량 검사',greedy:'제약 기반 평가 · Greedy',rollout:'남은 박스 고려 · Rollout','strategy-greedy':'Greedy · 현재 박스만',macs:'MACS','tetris-reserved':'Tetris Reserved Slot','dynamic-reservation':'Dynamic Reservation',lookahead:'Lookahead','future-hybrid':'Future-Aware Hybrid'};
 export interface Weights { maximum:number;mean:number;roughness:number;void:number;flat:number;balance:number;time:number;future:number;stability:number;inventory:number;foundation:number;load:number;contact?:number;futureSurface?:number }
 export interface SearchSettings { strategy?:StrategyConfig; temporaryBuffer?:boolean; plannerSeed:number;topK:number;samples:number;depth:number;maxCandidates:number;weights:Weights;candidateMode?:'legacy'|'frontier';inventoryMode?:'sample-grid'|'geometry'|'none';virtualCandidates?:number;portfolio?:boolean;policy?:'online'|'legacy';reserveProbes?:number;stockPolicy?:'compact'|'size-first';interiorPacking?:boolean }
 export interface InventoryAssessment { opportunity:number;fitFraction:number;foundationPenalty:number;strongerRemaining:number;types:{id:string;quantity:number;fitSites:number;sampleSites:number}[] }
