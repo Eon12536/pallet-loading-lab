@@ -1,4 +1,5 @@
 import {robotCount,robotKind} from './fleet';
+import {beltBounds} from './conveyor';
 /* Hallmark · factory stage · studied: yes · Visual Components / FactoryLens reference
  * Pre-emit critique: P5 H5 E4 S5 R5 V4. Light concrete, powder-coated steel; presentation only. */
 import * as THREE from 'three';
@@ -18,7 +19,7 @@ export function createFactoryEnvironment(pallet:Pallet){
  // Deterministic concrete microtexture, produced once rather than loaded from a CDN.
  const canvas=document.createElement('canvas');canvas.width=canvas.height=512;const c=canvas.getContext('2d')!;c.fillStyle=FACTORY.floor;c.fillRect(0,0,512,512);let seed=19;for(let i=0;i<13000;i++){seed=(seed*1664525+1013904223)>>>0;const x=seed%512;seed=(seed*1664525+1013904223)>>>0;const y=seed%512;c.globalAlpha=.05+(seed%8)/100;c.fillStyle=i%2?FACTORY.upper:FACTORY.dark;c.fillRect(x,y,1+(seed%3),1);}c.globalAlpha=1;
  const concrete=new THREE.CanvasTexture(canvas);concrete.colorSpace=THREE.SRGBColorSpace;concrete.wrapS=concrete.wrapT=THREE.RepeatWrapping;concrete.repeat.set(9,9);textures.push(concrete);
- const factoryWidth=Math.max(18,robotCount(pallet)*Math.max(3600,pallet.width+2200)/1000+4);
+ const factoryWidth=Math.max(18,robotCount(pallet)*Math.max(3600,pallet.width+2200)/1000+4,pallet.conveyorExtensionMm?(beltBounds(pallet).right-beltBounds(pallet).left)/1000+6:0);
  const floorMat=new THREE.MeshStandardMaterial({map:concrete,roughness:.93,metalness:.05}),floorGeo=new THREE.BoxGeometry(factoryWidth,.16,18),floor=new THREE.Mesh(floorGeo,floorMat);materials.push(floorMat);geometries.push(floorGeo);floor.position.y=FLOOR-.08;floor.receiveShadow=true;group.add(floor);
  for(let n=-9;n<=9;n+=3){stripe(n,0,.013,18,FACTORY.seam);stripe(0,n,18,.013,FACTORY.seam);}
  // Paint is flat and traversable. The four radial shipping lanes follow the simulation routes.
@@ -58,7 +59,7 @@ export function createFactoryEnvironment(pallet:Pallet){
  sign('RESERVE / 예비 재고',3.1,.34,[-5,3.05,-7.05],[0,0,0]);
  // Perimeter protection stays outside all four active cells and their radial lanes.
  function fence(x:number,z:number,length:number,rotate=false){const a=rotate?new THREE.Vector3(x,0,z):new THREE.Vector3(x,0,z),b=rotate?new THREE.Vector3(x,0,z+length):new THREE.Vector3(x+length,0,z);for(let i=0;i<=Math.ceil(length/1.4);i++){const v=a.clone().lerp(b,i/Math.ceil(length/1.4));block(FACTORY.yellow,[.07,1.45,.07],[v.x,.32,v.z]);}for(const y of [-.22,1])beam(a.clone().setY(y),b.clone().setY(y),.04,FACTORY.dark);const pts=[];for(let d=0;d<=length;d+=.13){const v=a.clone().lerp(b,d/length);pts.push(v.clone().setY(-.2),v.clone().setY(.99));}for(let y=-.2;y<=1;y+=.16)pts.push(a.clone().setY(y),b.clone().setY(y));const geo=new THREE.BufferGeometry().setFromPoints(pts),mat=new THREE.LineBasicMaterial({color:FACTORY.dark,transparent:true,opacity:.45});geometries.push(geo);materials.push(mat);group.add(new THREE.LineSegments(geo,mat));}
- fence(-4.4,-5.05,4.9);fence(factoryWidth/2-.9,-2.8,4.6,true);
+ if(!pallet.conveyorExtensionMm)fence(-4.4,-5.05,4.9);else fence(factoryWidth/2-.9,-6.8,1.5,true);fence(factoryWidth/2-.9,-2.8,4.6,true);
  // Electrical cabinet and a small operator terminal, clear of transport paths.
  block(FACTORY.paper,[.65,1.55,.48],[7.4,.37,-3.8]);block(FACTORY.steel,[.56,1.4,.025],[7.4,.37,-3.54]);block(FACTORY.dark,[.04,.25,.04],[7.58,.45,-3.51]);block(FACTORY.dark,[.09,1.2,.09],[5.9,.2,-3.9]);block(FACTORY.steel,[.52,.36,.08],[5.9,.85,-3.9]);block(FACTORY.window,[.44,.26,.01],[5.9,.85,-3.85]);
  for(const x of [6.9,7.9])block(FACTORY.yellow,[.09,.8,.09],[x,0,-3.2]);
