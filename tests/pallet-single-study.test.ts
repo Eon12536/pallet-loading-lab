@@ -6,7 +6,7 @@ import { csv } from '../src/pallet/benchmark/export';
 import { initialDashboardView } from '../src/pallet/relay/dashboardView';
 import type { TrialRow } from '../src/pallet/benchmark/model';
 it('keeps the one-arm one-pallet configuration and explicit research route',()=>{
- const c=singleStudyConfig();expect(c.scenario.pallet.palletsPerRobot).toBe(1);expect(c.scenario.pallet.robotLayout?.count).toBe(1);expect(c.scenario.supplyMode).toBe('arrival');expect(c.settings.temporaryBuffer).not.toBe(true);expect(initialDashboardView('?palletView=single-study')).toBe('single-study');expect(c.algorithms).toContain('hrpal-inferred');expect(c.algorithms).not.toContain('offline-stock');
+ const c=singleStudyConfig();expect(c.scenario.pallet.palletsPerRobot).toBe(1);expect(c.scenario.pallet.robotLayout?.count).toBe(1);expect(c.scenario.supplyMode).toBe('arrival');expect(c.settings.temporaryBuffer).not.toBe(true);expect(initialDashboardView('?palletView=single-study')).toBe('single-study');expect(c.algorithms).not.toContain('hrpal-inferred');expect(c.algorithms).not.toContain('hrpal-grid-v1');expect(c.algorithms).not.toContain('offline-stock');
 });
 it('pattern replay is deterministic, commits shared checks, and ignores runtime in scoring',async()=>{
  const c=singleStudyConfig(1),spec={algorithm:'hrpal-inferred',caseId:'identical' as const,seed:42,episode:0};

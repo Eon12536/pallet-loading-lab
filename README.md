@@ -1,4 +1,10 @@
-# Conventional Pattern-Based Palletizing (HRPal-style Baseline)
+# ALPS / 6영역 알고리즘 벤치마크
+
+[공개 벤치마크 대시보드](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=benchmark&v=40#pallet) · [측정 조건·결과·검증 범위](docs/BENCHMARK-SIX-AREA.md)
+
+무작위 순서·누락·파손·규격 오인식·그리퍼/TCP 검사를 필수로 적용합니다. 현대 추정 기준선은 활성 비교에서 제외하고 과거 기록은 보존했습니다. 실제 IK·진공 파지·동적 붕괴는 미검증입니다. 사전 측정 환경과 새 브라우저 측정 환경을 구분합니다.
+
+## 이전 고정 패턴 실험 기록 · 활성 비교에서 제외
 
 [고정 패턴·ALPS 비교 시뮬레이터](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=single-study&v=39#pallet) · [구현·검증·실측 비교](docs/CONVENTIONAL-PATTERN.md)
 

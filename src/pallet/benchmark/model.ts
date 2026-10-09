@@ -3,11 +3,11 @@ export const AREAS=['efficiency','stability','time','robustness','robot','except
 export type Area=typeof AREAS[number];
 export const AREA_NAMES:Record<Area,string>={efficiency:'적재 효율',stability:'정적 안정성',time:'작업·계산 효율',robustness:'불확정 순서 대응',robot:'로봇 기하 실행',exception:'예외 대응'};
 export const DEFAULT_WEIGHTS:Record<Area,number>={efficiency:25,stability:25,time:15,robustness:20,robot:10,exception:5};
-export const CASES={identical:'동일 크기',mixed:'다양한 크기',smallFirst:'작은 박스 우선',largeFirst:'큰 박스 우선',heavyLate:'무거운 박스 후입고',lightFirst:'가벼운 박스 우선 (동일 질량 정렬)',random:'완전 무작위 순서',missing:'박스 누락',resize:'규격 오인식·재관측',damaged:'파손 박스 격리',palletChange:'팔레트 규격 변경'} as const;
+export const CASES={identical:'동일 크기',mixed:'다양한 크기',smallFirst:'작은 박스 우선',largeFirst:'큰 박스 우선',heavyLate:'무거운 박스 후입고',lightFirst:'가벼운 박스 우선 (동일 질량 정렬)',random:'완전 무작위 순서',randomExceptions:'무작위 예외 · 누락·파손·규격 오인식',missing:'박스 누락',resize:'규격 오인식·재관측',damaged:'파손 박스 격리',palletChange:'팔레트 규격 변경'} as const;
 export type CaseId=keyof typeof CASES;
 export type Outcome='complete'|'partial'|'no-placement'|'constraint-rejected'|'timeout'|'error'|'environment-blocked';
 export type Violation='bounds'|'collision'|'height'|'orientation'|'load'|'support'|'payload'|'robot-path'|'protocol';
-export interface BenchmarkConfig {scenario:Scenario;settings:SearchSettings;algorithms:string[];cases:CaseId[];repeats:number;seed:number;decisionMs:number;trialMs:number;probeLimit:number;includeOffline:boolean;warmupRuns?:number;robotAccelerationMmS2?:number|null}
+export interface BenchmarkConfig {scenario:Scenario;settings:SearchSettings;algorithms:string[];cases:CaseId[];repeats:number;seed:number;decisionMs:number;trialMs:number;probeLimit:number;includeOffline:boolean;warmupRuns?:number;robotAccelerationMmS2?:number|null;sixArea?:boolean;continueAfterFailure?:boolean}
 export interface TrialSpec {algorithm:string;caseId:CaseId;seed:number;episode:number}
 export interface AlgorithmEntry {version?:string;id:string;name:string;scope:'online'|'offline';family:string;description:string;plan:(input:PlanningInput)=>Analysis}
 export interface TraceStep {step:number;box:Observation;placement?:Placement;path?:GripPath;decisionMs:number;disposition:string;reason:string;center:{x:number;y:number;z:number};minSupport:number|null;minMargin:number|null;pallet:Pallet}

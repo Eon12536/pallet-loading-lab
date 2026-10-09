@@ -79,6 +79,11 @@ export async function runTrial(c:BenchmarkConfig,spec:TrialSpec,hooks:Hooks={},d
   }
   const before=frame,committed=advance(frame,input,rejected.length?{...analysis!,runId:input.runId,stepId:input.stepId,selectedId:null}:analysis);
   frame=committed;const rec=frame.records.at(-1)!;
+  // An ordinary infeasible box is counted as unplaced, then the next arrived box is evaluated.
+  // Never recover from an unsafe proposal, timeout or environment invalidation this way.
+  if(c.continueAfterFailure&&frame.blocked&&!rejected.length&&(!analysis||analysis.selectedId===null)&&rec.disposition==='blocked'){
+   rec.disposition='unplaced';frame={...frame,processed:before.processed+1,blocked:false,reason:''};
+  }
   if(!rejected.length&&analysis?.selectedId&&rec.disposition!=='placed'){addViolation([rec.reason||'확정 검사 거절']);row.outcome='constraint-rejected';row.reason=rec.reason;}
   if(rec.disposition==='placed')validInTime++;
   if(event){const expected=event.kind==='damaged'?'excluded':event.kind==='missing'?'missing':'placed';row.exceptions.push({kind:event.kind,encountered:true,passed:rec.disposition===expected,ms:event.kind==='resize'?elapsed:null});}

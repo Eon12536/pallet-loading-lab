@@ -2,7 +2,7 @@ import { validateBenchmark } from './scenarios';
 import { failedTrial } from './runner';
 import type { BenchmarkConfig,TrialSpec,TrialRow,WarmupRecord } from './model';
 export function trialList(c:BenchmarkConfig){validateBenchmark(c);const jobs:TrialSpec[]=[];
- for(let episode=0;episode<c.repeats;episode++)for(const caseId of c.cases){const ids=[...c.algorithms,...(c.includeOffline&&!['missing','resize','damaged','palletChange'].includes(caseId)?['offline-stock']:[])];for(const algorithm of ids)jobs.push({algorithm,caseId,seed:(c.seed+episode)%2147483648,episode});}return jobs;
+ for(let episode=0;episode<c.repeats;episode++)for(const caseId of c.cases){const ids=[...c.algorithms,...(c.includeOffline&&!['missing','resize','damaged','palletChange','randomExceptions'].includes(caseId)?['offline-stock']:[])];for(const algorithm of ids)jobs.push({algorithm,caseId,seed:(c.seed+episode)%2147483648,episode});}return jobs;
 }
 export interface BenchmarkProgress {done:number;total:number;active?:TrialSpec;step?:number;phase?:'warmup'|'measurement';state:'running'|'paused'|'cancelled'|'complete'}
 /** One isolated trial at a time; warmup uses the SAME worker but fresh trial state. */

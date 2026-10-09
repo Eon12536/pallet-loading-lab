@@ -26,4 +26,6 @@ for(const [id,name,method] of [['pack-first','First Fit','first'],['pack-greedy'
 }
 registerAlgorithm({id:'offline-stock',name:'오프라인 기준해 · 전체 재고',version:BUNDLED_ALGORITHM_VERSION,scope:'offline',family:'참고용, 순위 제외',description:'전체 재고 재정렬 허용 Greedy. 최적해 아님; 온라인 정보 조건과 다름',plan:i=>plan({...i,algorithm:'greedy'})});
 export const algorithmRegistry=()=>[...entries.values()];
+/** Archived estimates remain readable for old results, but are excluded from active comparisons. */
+export const activeAlgorithmRegistry=()=>algorithmRegistry().filter(a=>a.id!=='hrpal-inferred'&&a.id!=='hrpal-grid-v1');
 export function getAlgorithm(id:string){const result=entries.get(id);if(!result)throw Error(`등록되지 않은 알고리즘: ${id}`);return result;}
