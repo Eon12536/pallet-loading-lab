@@ -11,3 +11,6 @@
 .bench-validation-summary{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--bench-muted)}.bench-validation-summary:empty{display:none}.bench-constraints th:not(:first-child){text-align:right}.bench-constraints td{padding:6px 9px}
 
 .bench-panel:not(.bench-constraints) .bench-table-wrap table{min-width:1000px}.bench-constraints table{min-width:520px}
+
+/* Hallmark review: preserve engineering hierarchy; null is distinct from zero. P4 H4 E4 S4 R4 V4. */
+.bench-grid polygon:last-of-type{stroke:var(--bench-muted);stroke-width:1.15}.bench-fill{fill:currentColor;fill-opacity:.09;stroke-width:1.7}.bench-charts svg text.bench-null{font-size:8px;fill:var(--bench-warn)}.bench-charts .bench-axis-label text{font-size:10px}.bench-preset{width:100%;margin:6px 0}.bench-measurement-note{border-left:2px solid var(--bench-warn);padding-left:10px}

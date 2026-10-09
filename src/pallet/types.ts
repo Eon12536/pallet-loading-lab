@@ -13,7 +13,7 @@ export interface StabilitySettings { maxSlenderness:number;minMarginRatio:number
 export const DEFAULT_STABILITY:StabilitySettings={maxSlenderness:2,minMarginRatio:.1,lateralAccelerationG:.15,loadSafetyFactor:1.25};
 export interface RobotLayout { count:number; architecture:'floor'|'ceiling'|'mixed'; floorCount:number }
 // Optional cell-layout metadata; it does not change the pallet physical boundary.
-export interface Pallet { width:number; depth:number; maxHeight:number; robotLayout?:RobotLayout }
+export interface Pallet { width:number; depth:number; maxHeight:number; conveyorMode?:'straight'|'loop'; robotLayout?:RobotLayout }
 export interface Constraints {
   packagingRobot?:ReachModel;
   standingHeight?:{enabled:boolean;maxRiseMm:number};
@@ -29,7 +29,7 @@ export interface SizeRange { min:number;max:number }
 export interface DimensionRanges { w:SizeRange;d:SizeRange;h:SizeRange }
 export interface SetGeneration {seed:number;typeCount:number;totalCount:number;model?:'legacy-grid'|'heterogeneous';assortment?:'individual'|'repeated';dimensions?:DimensionRanges;gridMm?:number;densityKgM3?:number}
 export type ArrivalPattern='shuffle'|'large-late'|'heavy-late'|'ordered'|'random-draw';
-export interface Scenario { supplyMode?:'arrival'|'stock-select';generation?:SetGeneration;version:1; units:{length:'mm';weight:'kg';time:'s'}; id:string; name:string; pallet:Pallet; types:BoxType[]; constraints:Constraints; arrival:{seed:number;pattern:ArrivalPattern}; events:ScenarioEvent[] }
+export interface Scenario { practical?:import('./relay/practical').PracticalConfig; intake?:{damageRate:number;thresholdMm:number}; supplyMode?:'arrival'|'stock-select';generation?:SetGeneration;version:1; units:{length:'mm';weight:'kg';time:'s'}; id:string; name:string; pallet:Pallet; types:BoxType[]; constraints:Constraints; arrival:{seed:number;pattern:ArrivalPattern}; events:ScenarioEvent[] }
 export interface Observation extends MaterialData { pickupPosition?:Vec3; id:string;typeId:string;size:Dimensions;weight:number;status:'normal'|'damaged'|'missing'|'resized';orientationAllowed:Orientation[];handling?:Handling }
 export interface Contact { id:string; area:number; share:number; rect:{x:number;y:number;w:number;d:number};forcePoint?:{x:number;y:number} }
 export interface Placement extends MaterialData { id:string; typeId:string; size:Dimensions; weight:number; position:Vec3; orientation:Orientation; supports:Contact[];supportRatio:number;loadAbove:number;handling?:Handling }

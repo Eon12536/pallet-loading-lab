@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { Pallet } from '../types';
 import { CONVEYOR,beltBounds,beltStation } from './conveyor';
+import {TWIN_ROBOT_PALETTE} from './twinSceneTheme';
 import {robotCount} from './fleet';
 
 export function createConveyorView(p:Pallet) {
@@ -27,17 +28,26 @@ export function createConveyorView(p:Pallet) {
       block(.16,.04,.16,x+(vertical?side*.32:d),-.39,y+(vertical?d:side*.32));
     }
   }
-  run((left+right)/2,front,right-left);run((left+right)/2,back,right-left,false,true);
-  run(left,(front+back)/2,front-back+width,true);run(right,(front+back)/2,front-back+width,true,true);
+  run((left+right)/2,front,right-left);if(p.conveyorMode!=='straight'){run((left+right)/2,back,right-left,false,true);
+  run(left,(front+back)/2,front-back+width,true);run(right,(front+back)/2,front-back+width,true,true);}
   const frame=new THREE.InstancedMesh(geometry,steel,parts.length),dummy=new THREE.Object3D();
   parts.forEach((v,i)=>{dummy.position.set(v.x,v.y,v.z);dummy.scale.set(v.w,v.h,v.d);dummy.updateMatrix();frame.setMatrixAt(i,dummy.matrix);});frame.castShadow=true;group.add(frame);
   for(let i=0;i<robotCount(p);i++){
     const point=beltStation(i,p);
     for(const edge of [-1,1]){const marker=new THREE.Mesh(new THREE.BoxGeometry(.8,.012,.045),markings);marker.position.set(point.x/1000,z+.008,front+edge*(width/2-.055));group.add(marker);}
   }
-  // A single measurement portal on the common infeed.
-  for(const side of [-1,1]){const upright=new THREE.Mesh(new THREE.BoxGeometry(.07,1.05,.07),steel);upright.position.set(left+.65,z+.525,front+side*.56);group.add(upright);}
-  const bridge=new THREE.Mesh(new THREE.BoxGeometry(.18,.1,1.19),steel);bridge.position.set(left+.65,z+1.02,front);group.add(bridge);
-  const scanner=new THREE.Mesh(new THREE.BoxGeometry(.1,.035,.3),new THREE.MeshStandardMaterial({color:'#b5e5bd',emissive:'#406347',emissiveIntensity:.4}));scanner.position.set(left+.65,z+.94,front);group.add(scanner);
-  return {group,update:(time:number)=>{animated.forEach((t,i)=>{t.offset.x=(i===1||i===3?1:-1)*time*CONVEYOR.speed/220;});},dispose:()=>texture.dispose()};
+  // Three-sided profile scanner; no crossbar obstructs the belt surface.
+  const portal=new THREE.Group();portal.name='intake-u-scanner';group.add(portal);
+  for(const side of [-1,1]){const upright=new THREE.Mesh(new THREE.BoxGeometry(.24,1.12,.13),dark);upright.position.set(left+.65,z+.56,front+side*.57);portal.add(upright);}
+  const bridge=new THREE.Mesh(new THREE.BoxGeometry(.24,.16,1.27),steel);bridge.position.set(left+.65,z+1.12,front);portal.add(bridge);
+  const signal=new THREE.MeshStandardMaterial({color:'#548a87',emissive:'#548a87',emissiveIntensity:.25});
+  for(const side of [-1,1]){const head=new THREE.Mesh(new THREE.BoxGeometry(.12,.28,.055),signal);head.position.set(left+.65,z+.44,front+side*.49);portal.add(head);}
+  const topHead=new THREE.Mesh(new THREE.BoxGeometry(.13,.07,.48),signal);topHead.position.set(left+.65,z+1.01,front);portal.add(topHead);
+  const laser=new THREE.Mesh(new THREE.PlaneGeometry(1.05,1.02),new THREE.MeshBasicMaterial({color:'#548a87',transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));
+  laser.rotation.y=Math.PI/2;laser.position.set(left+.65,z+.51,front);portal.add(laser);
+  return {group,update:(time:number,active=false,rejected=false)=>{
+   animated.forEach((t,i)=>{t.offset.x=(i===1||i===3?1:-1)*time*CONVEYOR.speed/220;});
+   const color=rejected?TWIN_ROBOT_PALETTE.warning:'#548a87';signal.color.set(color);signal.emissive.set(color);signal.emissiveIntensity=active?.7:.2;
+   laser.material.color.set(color);laser.material.opacity=active?.2:.06;
+  },dispose:()=>texture.dispose()};
 }

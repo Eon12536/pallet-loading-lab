@@ -1,3 +1,4 @@
+import {scanned} from './intake';
 import {robotObservation} from './fleet';
 import {assignCentrally,type DispatchSummary} from './centralDispatch';
 import {candidateSet} from '../planner';
@@ -23,9 +24,12 @@ const settings={...COMPACT_SEARCH,policy:'legacy' as const,inventoryMode:'none' 
 
 // This boundary deliberately excludes the future input manifest and unmeasured boxes.
 export function observedProblem(s:Scenario,w:RelayWorld){
- const world=structuredClone(w);world.boxes=world.boxes.filter(b=>b.status==='placed'||b.flow&&b.flow.measuredAt<=w.time);
+ const world=structuredClone(w);world.boxes=world.boxes.filter(b=>b.status==='placed'||scanned(b,w.time,s)&&b.status==='belt');
+ for(const b of world.boxes)delete b.deformation;
  const ids=new Set(world.boxes.map(b=>b.observation.typeId));
- return {scenario:{...structuredClone(s),types:s.types.filter(t=>ids.has(t.id)),events:[]},world};
+ const scenario={...structuredClone(s),types:s.types.filter(t=>ids.has(t.id)),events:[]};
+ if(scenario.practical)scenario.practical.profile.baseTypes=Object.fromEntries(Object.entries(scenario.practical.profile.baseTypes).filter(([id])=>ids.has(id)));
+ return {scenario,world};
 }
 function input(s:Scenario,w:RelayWorld,robot:number,b:RelayBox):PlanningInput{
  return {runId:w.runId,stepId:w.revision,pallet:s.pallet,types:s.types,constraints:receiveConstraints(s),placements:w.cells[robot].placements,current:{...robotObservation(s.pallet,robot,b.observation),pickupPosition:beltPickup(b.observation,robot,s.pallet)},remaining:{},algorithm:'greedy',settings};
@@ -45,7 +49,7 @@ function sites(ctx:PlanningInput,key?:string){
 }
 export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[],central=true):FlowDecision{
  const start=performance.now(),proposals:FlowProposal[]=[];let checks=0;
- const known=w.boxes.filter(b=>b.status==='belt'&&b.flow!.measuredAt<=w.time);
+ const known=w.boxes.filter(b=>b.status==='belt'&&b.observation.status!=='damaged'&&scanned(b,w.time,s));
  for(let robot=0;robot<w.cells.length;robot++){
   if(busy.includes(robot)||w.stream!.cells[robot].phase!=='loading')continue;
   const eligible=known.filter(b=>inPickWindow(b,w.time,w.stream!.speed,s.pallet,robot)&&(!b.flow!.checks[robot]||b.flow!.checks[robot].version!==w.cells[robot].version||w.time-b.flow!.checks[robot].at>25))
@@ -54,9 +58,10 @@ export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[],central=true
    const ctx=input(s,w,robot,box),key=`${w.runId}/${robot}/${w.cells[robot].version}/${box.observation.id}`,options=sites(ctx,key);checks++;
    let chosen:Candidate[]=[],blocked=0,tested=0,reason='현재 지지·하중·높이 조건을 만족하는 위치 없음 · 그대로 순환';
    if(!options.length&&diagnostics.get(key))reason=`${diagnostics.get(key)} · 그대로 순환`;
-   const dims=Object.values(box.observation.size).sort((a,b)=>b-a),foundation=dims[0]*dims[1]>=180000&&box.observation.weight>=6&&box.observation.maxLoadKg!==0&&box.observation.handling!=='no-top-load';
+   const isFoundation=(b:RelayBox)=>{const dims=Object.values(b.observation.size).sort((a,b)=>b-a);return dims[0]*dims[1]>=180000&&(s.practical?.weightPolicy==='capacity'?Number.isFinite(b.observation.maxLoadKg)&&b.observation.maxLoadKg!>0:b.observation.weight>=6&&b.observation.maxLoadKg!==0)&&b.observation.handling!=='no-top-load';};
+   const foundation=isFoundation(box);
    const cellAge=w.time-w.stream!.cells[robot].since;
-   const incomingFoundation=known.some(b=>b!==box&&b.observation.weight>=6&&b.observation.maxLoadKg!==0&&b.observation.handling!=='no-top-load'&&b.observation.size.w*b.observation.size.d>=180000&&stationArc(robot,s.pallet)-beltArc(b,w.time,w.stream!.speed,s.pallet)>0&&stationArc(robot,s.pallet)-beltArc(b,w.time,w.stream!.speed,s.pallet)<w.stream!.speed*20);
+   const incomingFoundation=known.some(b=>b!==box&&isFoundation(b)&&stationArc(robot,s.pallet)-beltArc(b,w.time,w.stream!.speed,s.pallet)>0&&stationArc(robot,s.pallet)-beltArc(b,w.time,w.stream!.speed,s.pallet)<w.stream!.speed*20);
    if(!ctx.placements.length&&!foundation&&!w.stream!.inputClosed&&box.flow!.passes<1&&(cellAge<10||incomingFoundation&&cellAge<30)){proposals.push({robot,boxId:box.observation.id,cellVersion:w.cells[robot].version,candidates:[],reason:'관측된 받침 도착을 잠시 기다림 · 바닥 후보 재검토',blocked:0,tested:0});continue;}
    if(options.length){
     const others=known.filter(b=>b!==box).sort((a,b)=>volume(b.observation.size)-volume(a.observation.size)).slice(0,3);

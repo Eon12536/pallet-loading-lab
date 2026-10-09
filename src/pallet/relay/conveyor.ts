@@ -8,7 +8,7 @@ import { incomingPosition } from '../constraints';
 // the receiving station remains reserved until that box is physically picked.
 export const CONVEYOR = { speed:600, width:900, deck:450, front:-500, back:-2500 } as const;
 export function beltBounds(p:Pallet) {
-  return { left:cellPose(0,p).x-1600, right:cellPose(robotCount(p)-1,p).x+1600 };
+  return { left:cellPose(0,p).x-(p.conveyorMode==='straight'?3000:1600), right:cellPose(robotCount(p)-1,p).x+1600 };
 }
 export function beltStation(robot:number,p:Pallet):Vec3 {
   return {x:cellPose(robot,p).x,y:CONVEYOR.front,z:CONVEYOR.deck};

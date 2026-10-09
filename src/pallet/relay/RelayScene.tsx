@@ -1,3 +1,6 @@
+import {addEndEffector} from './EndEffectorView';
+import {boxGeometry} from './DentedBoxView';
+import {SCANNER_OFFSET,REJECT_SECONDS,type Dent} from './intake';
 import {robotKind,robotCount} from './fleet';
 import {createGantryView} from './GantryView';
 import {TWIN_SCENE,TWIN_ROBOT_PALETTE,TWIN_CELL_COLORS as RELAY_COLORS,displayBoxColor} from './twinSceneTheme';
@@ -46,16 +49,18 @@ export function RelayScene(props:Props){
     if(stock)stock.visible=p.phase!=='ready'&&p.phase!=='receiving';
    }
    const beltClock=p.phase==='receiving'?p.processProgress*p.world.boxes.length*.35:clock;
-   stage.current.belt?.update(beltClock*(p.world.stream?p.world.stream.speed/600:1));
+   const scanning=p.world.boxes.some(b=>b.status==='belt'&&b.flow&&clock<b.flow.measuredAt&&Math.abs((clock-b.flow.enteredAt)*(p.world.stream?.speed??210)-SCANNER_OFFSET)<b.observation.size.w/2+50);
+   const rejected=p.world.boxes.some(b=>b.scan?.verdict==='damaged'&&clock-b.scan.completedAt<2);
+   stage.current.belt?.update(beltClock*(p.world.stream?p.world.stream.speed/600:1),scanning,rejected);
    for(const [id,item] of stage.current.beltBoxes){
-    if(p.world.stream){const b=p.world.boxes.find(b=>b.observation.id===id);if(!b?.flow){item.object.visible=false;continue;}const position=streamPosition(b,clock,p.world.stream.speed,p.scenario.pallet);item.object.position.copy(vector({...position,z:position.z+item.height/2}));continue;}
+    if(p.world.stream){const b=p.world.boxes.find(b=>b.observation.id===id);if(!b?.flow){item.object.visible=false;continue;}const position=streamPosition(b,b.status==='rejecting'?b.flow.measuredAt:clock,p.world.stream.speed,p.scenario.pallet);if(b.status==='rejecting')position.y-=Math.min(1,Math.max(0,(clock-b.flow.measuredAt)/REJECT_SECONDS))*1050;item.object.position.copy(vector({...position,z:position.z+item.height/2}));continue;}
     const pad=p.world.pads[item.from];if(pad.boxId!==id)continue;
     const position=beltPosition(item.from,p.scenario.pallet,beltProgress(pad,item.from,p.scenario.pallet,clock));
     item.object.position.copy(vector({...position,z:position.z+item.height/2}));
    }
    const intake=stage.current.intake;if(intake){intake.visible=p.phase==='receiving';const bounds=beltBounds(p.scenario.pallet);intake.position.set((bounds.left+300+(p.processProgress*p.world.boxes.length%1)*2000)/1000,CONVEYOR.deck/1000+.13,CONVEYOR.front/1000);}
    renderer.domElement.dataset.beltTransit=JSON.stringify(p.world.pads.filter(v=>v.boxId).map(v=>({box:v.boxId,arrived:v.arrived,readyAt:v.readyAt})));
-   if(p.world.stream){renderer.domElement.dataset.flow=JSON.stringify({time:clock,entered:p.world.stream.entered,measured:p.world.stream.measured,passes:p.world.stream.passes,cells:p.world.stream.cells.map(c=>c.phase),dispatched:p.world.stream.dispatched.length});renderer.domElement.dataset.beltPositions=JSON.stringify(p.world.boxes.filter(b=>b.status==='belt').map(b=>({id:b.observation.id,...streamPosition(b,clock,p.world.stream!.speed,p.scenario.pallet)})));}
+   if(p.world.stream){renderer.domElement.dataset.flow=JSON.stringify({conveyor:p.scenario.pallet.conveyorMode??'loop',quarantined:p.world.boxes.filter(b=>b.status==='quarantined').length,outfeed:p.world.boxes.filter(b=>b.status==='outfeed').length,scanning,time:clock,entered:p.world.stream.entered,measured:p.world.stream.measured,passes:p.world.stream.passes,cells:p.world.stream.cells.map(c=>c.phase),dispatched:p.world.stream.dispatched.length});renderer.domElement.dataset.beltPositions=JSON.stringify(p.world.boxes.filter(b=>b.status==='belt').map(b=>({id:b.observation.id,...streamPosition(b,clock,p.world.stream!.speed,p.scenario.pallet)})));}
    renderer.domElement.dataset.processPhase=p.phase;renderer.domElement.dataset.processProgress=p.processProgress.toFixed(3);renderer.domElement.dataset.cargoVisible=String(transport.showCargo);
    moving.visible=!!p.motions.length;const labels:string[]=[],active=new Set<number>();
    for(const motion of p.motions){const a=motion.action,box=p.world.boxes.find(b=>b.observation.id===a.boxId)!.observation,obj=movingBoxes.get(a.boxId);if(!obj)continue;active.add(a.robot);
@@ -78,12 +83,17 @@ export function RelayScene(props:Props){
  useEffect(()=>{const s=stage.current;if(!s)return;dispose(s.content);s.content.clear();dispose(s.moving);s.moving.clear();s.movingBoxes.clear();for(const grip of s.grips){dispose(grip);grip.clear();}
   s.belt?.dispose();s.beltBoxes.clear();s.labels=[];s.cargos=[];s.platforms=[];s.empties=[];s.infeed=[];s.stock=[];
   const p=props.scenario.pallet,g=props.scenario.constraints.gripper;s.belt=createConveyorView(p);s.content.add(s.belt.group);
-  const cube=(group:THREE.Group,size:number[],position:THREE.Vector3,color:string,opacity=1)=>{const geo=new THREE.BoxGeometry(...size as [number,number,number]),mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:.7,transparent:opacity<1,opacity}));mesh.position.copy(position);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);const edge=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:TWIN_SCENE.edge,transparent:true,opacity:.45}));edge.position.copy(position);group.add(edge);return mesh;};
+  const cube=(group:THREE.Group,size:number[],position:THREE.Vector3,color:string,opacity=1,dent?:Dent)=>{const geo=boxGeometry(size as [number,number,number],dent),mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:.7,transparent:opacity<1,opacity}));mesh.position.copy(position);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);const edge=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:TWIN_SCENE.edge,transparent:true,opacity:.45}));edge.position.copy(position);group.add(edge);return mesh;};
   const label=(text:string,pos:Vec3,color:string,scale=1.4)=>{const canvas=document.createElement('canvas');canvas.width=768;canvas.height=96;const ctx=canvas.getContext('2d')!;ctx.fillStyle=TWIN_SCENE.label;ctx.fillRect(0,0,768,96);ctx.strokeStyle=color;ctx.lineWidth=4;ctx.strokeRect(2,2,764,92);ctx.fillStyle=TWIN_SCENE.text;ctx.textAlign='center';ctx.font='bold 46px sans-serif';ctx.fillText(text,384,64);const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const mat=new THREE.SpriteMaterial({map:texture,depthTest:false}),sprite=new THREE.Sprite(mat);sprite.scale.set(scale*1.2,scale*.15,1);sprite.position.copy(vector(pos));sprite.name=text.startsWith('P0')||text.startsWith('PICK')||text.startsWith('INFEED')?'cell-label':'detail-label';sprite.visible=!s.factoryVisible||sprite.name==='cell-label';s.labels.push(sprite);s.content.add(sprite);};
   const woodPallet=(parent:THREE.Group)=>{const geometry=new THREE.BoxGeometry(1,1,1),material=new THREE.MeshStandardMaterial({color:FACTORY.timber,roughness:.88}),parts:Array<{x:number;y:number;z:number;w:number;h:number;d:number}>=[];for(let k=0;k<7;k++)parts.push({x:0,y:-.018,z:(k/6-.5)*(p.depth/1000-.1),w:p.width/1000,h:.035,d:.09});for(const x of [-.36,0,.36])parts.push({x:x*p.width/1000,y:-.075,z:0,w:.075,h:.08,d:p.depth/1000});const mesh=new THREE.InstancedMesh(geometry,material,parts.length),o=new THREE.Object3D();parts.forEach((b,i)=>{o.position.set(b.x,b.y,b.z);o.scale.set(b.w,b.h,b.d);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);});mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);};
   props.world.cells.forEach((cell,i)=>{const pose=cellPose(i,p),group=new THREE.Group();group.position.copy(vector({...pose,z:0}));group.rotation.y=-pose.angle;s.content.add(group);s.roots[i].position.copy(group.position);s.roots[i].rotation.y=group.rotation.y;
    const cargo=new THREE.Group(),platform=new THREE.Group(),empty=new THREE.Group(),feed=new THREE.Group(),stock=new THREE.Group();group.add(cargo,platform,empty,feed,stock);s.empties.push(empty);s.cargos.push(cargo);s.platforms.push(platform);s.infeed.push(feed);s.stock.push(stock);
    woodPallet(cargo);
+   if(props.scenario.practical?.jig){
+    // Outer guide frame only: no wall reactions are used by the static support model.
+    cube(group,[.04,.08,p.depth/1000+.08],new THREE.Vector3(-p.width/2000-.025,.04,0),TWIN_SCENE.tool);
+    cube(group,[p.width/1000+.08,.08,.04],new THREE.Vector3(0,.04,-p.depth/2000-.025),TWIN_SCENE.tool);
+   }
    const boundary=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(p.width/1000,p.maxHeight/1000,p.depth/1000)),new THREE.LineBasicMaterial({color:RELAY_COLORS[i],transparent:true,opacity:.3}));boundary.position.y=p.maxHeight/2000;group.add(boundary);
    const input=incomingPosition();if(!props.world.stream)cube(group,[.8,.06,.65],new THREE.Vector3(...engineToRender({x:input.x+400,y:input.y+325,z:-30},p)),TWIN_SCENE.source);
    label(`P0${i+1} · ${cell.placements.length} BOXES`,toWorld({x:p.width/2,y:p.depth+250,z:30},i,p),RELAY_COLORS[i],1.4);
@@ -100,15 +110,22 @@ export function RelayScene(props:Props){
    for(const x of [-.35,.35])for(const z of [-.25,.25])cube(platform,[.14,.16,.18],new THREE.Vector3(x,-.32,z),TWIN_SCENE.wheel);
    const laneEnd=toWorld({x:p.width/2,y:p.depth/2+TRAVEL_MM,z:-100},i,p),laneStart=toWorld({x:p.width/2,y:p.depth/2,z:-100},i,p);
    const route=new THREE.Line(new THREE.BufferGeometry().setFromPoints([vector(laneStart),vector(laneEnd)]),new THREE.LineDashedMaterial({color:RELAY_COLORS[i],dashSize:.14,gapSize:.12}));route.computeLineDistances();s.content.add(route);label(props.context==='fixed'?'OUT · 컨베이어':'OUT · 3 m 전용 통로',{...laneEnd,z:60},RELAY_COLORS[i],1.4);
-   cube(s.grips[i],[g.width/1000,g.height/1000,g.depth/1000],new THREE.Vector3(0,g.height/2000,0),TWIN_SCENE.tool);
-   // Four visible vacuum cups, inside the existing tool envelope (TCP is contact plane).
-   for(const x of [-.3,.3])for(const z of [-.3,.3]){const cup=new THREE.Mesh(new THREE.CylinderGeometry(.031,.043,.025,16),new THREE.MeshStandardMaterial({color:TWIN_ROBOT_PALETTE.dark,roughness:.8}));cup.position.set(x*g.width/1000,.013,z*g.depth/1000);s.grips[i].add(cup);}
+   addEndEffector(s.grips[i],g,props.scenario.practical?.tool??'vacuum');
+
 
   });
   const intake=new THREE.Group();cube(intake,[.36,.26,.3],new THREE.Vector3(),FACTORY.carton);s.content.add(intake);s.intake=intake;
   label('INFEED / SCAN',{x:beltBounds(p).left+650,y:CONVEYOR.front,z:1700},RELAY_COLORS[0],1.4);
   props.world.pads.forEach((pad,i)=>{if(!pad.boxId||props.motions.some(m=>m.action.boxId===pad.boxId))return;const b=props.world.boxes.find(b=>b.observation.id===pad.boxId)!.observation,type=props.scenario.types.find(t=>t.id===b.typeId),object=new THREE.Group();cube(object,renderSize(b.size),new THREE.Vector3(),displayBoxColor(type?.color||FACTORY.carton));s.content.add(object);s.beltBoxes.set(pad.boxId,{object,from:i,height:b.size.h});});
-  if(props.world.stream)for(const b of props.world.boxes.filter(b=>b.status==='belt')){const object=new THREE.Group(),type=props.scenario.types.find(t=>t.id===b.observation.typeId);cube(object,renderSize(b.observation.size),new THREE.Vector3(),displayBoxColor(type?.color||FACTORY.carton));s.content.add(object);s.beltBoxes.set(b.observation.id,{object,height:b.observation.size.h});}
+  if(props.world.stream)for(const b of props.world.boxes.filter(b=>b.status==='belt'||b.status==='rejecting')){const object=new THREE.Group(),type=props.scenario.types.find(t=>t.id===b.observation.typeId);cube(object,renderSize(b.observation.size),new THREE.Vector3(),displayBoxColor(type?.color||FACTORY.carton),1,b.deformation);s.content.add(object);s.beltBoxes.set(b.observation.id,{object,height:b.observation.size.h});}
+  if(props.world.stream)for(const status of ['quarantined','outfeed'] as const){
+   const boxes=props.world.boxes.filter(b=>b.status===status),last=boxes.at(-1),bounds=beltBounds(p);
+   if(!boxes.length)continue;
+   const x=status==='quarantined'?bounds.left+SCANNER_OFFSET:bounds.right+550,y=CONVEYOR.front-(status==='quarantined'?1150:0);
+   cube(s.content,[1.05,.08,.95],vector({x,y,z:CONVEYOR.deck-40}),TWIN_SCENE.platform);
+   if(last){const t=props.scenario.types.find(t=>t.id===last.observation.typeId);cube(s.content,renderSize(last.observation.size),vector({x,y,z:CONVEYOR.deck+last.observation.size.h/2}),displayBoxColor(t?.color||FACTORY.carton),1,last.deformation);}
+   label(`${status==='quarantined'?'INFEED 격리':'INFEED 출구 대기'} ${boxes.length}개 · 대표 1개`,{x,y:y-600,z:CONVEYOR.deck+650},TWIN_ROBOT_PALETTE.warning,1.7);
+  }
   for(const motion of props.motions){const a=motion.action,b=props.world.boxes.find(b=>b.observation.id===a.boxId)!.observation,type=props.scenario.types.find(t=>t.id===b.typeId),obj=new THREE.Group();cube(obj,renderSize(b.size),new THREE.Vector3(),displayBoxColor(type?.color||FACTORY.carton));s.moving.add(obj);s.movingBoxes.set(a.boxId,obj);}
   if(props.explain){const a=props.motions[0]?.action,c=a?.candidate;if(a?.path&&c){
    const points=a.path.points.map(v=>vector(toWorld(v.tcp,a.robot,p)));
@@ -116,11 +133,12 @@ export function RelayScene(props:Props){
    const place=c.placement,ghost=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...renderSize(place.size))),new THREE.LineDashedMaterial({color:RELAY_COLORS[a.robot],dashSize:.05,gapSize:.035}));ghost.position.copy(vector(toWorld(centerOf(place.position,place.size),a.robot,p)));ghost.computeLineDistances();s.content.add(ghost);
    for(const contact of place.supports){const r=contact.rect;cube(s.content,[r.w/1000,.004,r.d/1000],vector(toWorld({x:r.x+r.w/2,y:r.y+r.d/2,z:place.position.z+2},a.robot,p)),RELAY_COLORS[a.robot],.4);}
   }}
+  s.renderer.domElement.dataset.tool=props.scenario.practical?.tool??'vacuum';s.renderer.domElement.dataset.jig=String(!!props.scenario.practical?.jig);
   s.renderer.domElement.dataset.layout=JSON.stringify(Array.from({length:robotCount(p)},(_,i)=>robotKind(p,i)));
   s.renderer.domElement.dataset.pads=JSON.stringify(props.world.pads.map(p=>p.boxId));
   s.renderer.domElement.dataset.queues=JSON.stringify(props.world.cells.map(c=>c.queue));s.renderer.domElement.dataset.placed=JSON.stringify(props.world.cells.map(c=>c.placements.map(p=>p.id)));s.renderer.domElement.dataset.revision=String(props.world.revision);
  },[props.scenario,props.world.stream?`${props.world.runId}:${props.world.revision}`:props.world,props.context,props.motions.map(m=>`${m.action.robot}:${m.action.boxId}:${m.action.kind}`).join('|')]);
- return <div className="relay-scene" ref={host} data-testid="relay-scene">{fallback&&<p>WebGL을 사용할 수 없습니다. 아래 재고와 전달 기록으로 결과를 확인하세요.</p>}<div className="relay-scene-note">SINGLE CONVEYOR / {count} PICK ZONES<br/>{props.world.stream?`연속 이송 ${props.world.stream.speed} mm/s · 이동 중 추적 집기`:'공용 벨트 600 mm/s · 빈 구역에 도착 후 집기'}</div><div className="factory-view-controls" aria-label="공장 시점 설정"><button onClick={()=>overview(false)}>공장 전경</button><button onClick={()=>overview(true)}>작업셀 확대</button><button aria-pressed={factoryVisible} onClick={()=>setFactoryVisible(v=>!v)}>{factoryVisible?'시설 숨기기':'시설 표시'}</button></div><span className="relay-scene-help">드래그 회전 · 휠 확대 · 우클릭 이동</span></div>;
+ return <div className="relay-scene" ref={host} data-testid="relay-scene">{fallback&&<p>WebGL을 사용할 수 없습니다. 아래 재고와 전달 기록으로 결과를 확인하세요.</p>}<div className="relay-scene-note">{props.scenario.pallet.conveyorMode==='straight'?'STRAIGHT CONVEYOR':'LOOP CONVEYOR'} / {count} PICK ZONES<br/>{props.world.stream?`연속 이송 ${props.world.stream.speed} mm/s · 이동 중 추적 집기`:'공용 벨트 600 mm/s · 빈 구역에 도착 후 집기'}</div><div className="factory-view-controls" aria-label="공장 시점 설정"><button onClick={()=>overview(false)}>공장 전경</button><button onClick={()=>overview(true)}>작업셀 확대</button><button aria-pressed={factoryVisible} onClick={()=>setFactoryVisible(v=>!v)}>{factoryVisible?'시설 숨기기':'시설 표시'}</button></div><span className="relay-scene-help">드래그 회전 · 휠 확대 · 우클릭 이동</span></div>;
 }
 
 function safeTransport(phase:ProcessPhase,progress:number,context:ContextId){
