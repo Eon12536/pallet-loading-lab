@@ -1,16 +1,17 @@
-# Pallet Loading Lab · 최신 결과 v19
+# Pallet Loading Lab · 최신 결과 v20
 
-2026-10-09 검증 완료본입니다. 기존 4대 로봇 컨베이어와 변형·관측 오차 적재 실험을 포함합니다.
+2026-10-09 성능 대시보드 갱신본입니다. 기존 4대 컨베이어와 변형 실험에 6개 핵심 지표, 단계별 3D 재생, 위험 박스 추적 및 동일 조건 비교를 추가했습니다.
 
-- [시뮬레이터 바로 실행 · 변형/관측 실험](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=adaptive&v=19#pallet)
-- [4대 로봇 컨베이어 대시보드](https://pallet-loading-lab.eon3602.chatgpt.site/?palletDemo=compact&palletView=relay&v=19#pallet)
+- [성능 대시보드 바로 실행](https://pallet-loading-lab.eon3602.chatgpt.site/?palletView=adaptive&v=20#pallet)
+- [4대 로봇 컨베이어 대시보드](https://pallet-loading-lab.eon3602.chatgpt.site/?palletDemo=compact&palletView=relay&v=20#pallet)
+- [새 대시보드 조작·지표·검증·한계](docs/PERFORMANCE-DASHBOARD.md)
 - [알고리즘·조작 방법·가정과 한계](docs/adaptive-packing.md)
 - [동일 입력 비교 결과 CSV](docs/adaptive-results/comparison.csv) · [JSON](docs/adaptive-results/comparison.json)
-- [검증 기록: 9개 파일 / 50개 테스트 통과](docs/adaptive-results/final-tests.txt)
+- [기존 v19 검증 기록: 9개 파일 / 50개 테스트 통과](docs/adaptive-results/final-tests.txt)
 
 로컬 실행: Node.js 22.12 이상에서 이 폴더로 이동한 뒤 `npm ci`, `npm run dev`를 실행합니다. 빌드는 `npm run build`입니다. 공개 실행 URL은 GitHub 저장소와 별도로 배포되어 있습니다.
 
-이번 업로드는 완성된 v19 소스와 실측 결과입니다. 이후 요청된 3DORP GLA/GLAS 고도화는 이 버전에 포함되지 않았습니다. 실물 로봇 IK·힘 제어·진공 밀봉 검증 완료를 의미하지 않습니다.
+이번 업로드는 완성된 v20 소스와 실측 결과입니다. 이후 요청된 3DORP GLA/GLAS 고도화는 이 버전에 포함되지 않았습니다. 실물 로봇 IK·힘 제어·진공 밀봉 검증 완료를 의미하지 않습니다.
 
 ---
 ## 공용 컨베이어 스튜디오 · 2026-10-08
