@@ -252,3 +252,8 @@ HOLD, 공개 NEXT 밖 확률 탐색, 자동 가중치 학습, 신경망 강화�
 
 기존 화면에 A/B/C 비교 실험 탭을 추가했습니다. 실행 주소는 `?palletView=adaptive#pallet`입니다.
 구현·가정값·검증 결과·한계: [상세 문서](docs/adaptive-packing.md).
+
+
+## PAC 2026 알고리즘 평가
+
+`/?palletView=benchmark#pallet`에서 기존 16개 온라인 어댑터와 별도 오프라인 기준해를 같은 시드·제약으로 반복 측정합니다. 무작위 기준선, 6영역 점수, 범위별 순위, 분포/CI, 3D 단계 기록 및 JSON/CSV를 지원합니다. [설계·실행·검증·실측 결과](docs/BENCHMARK.md).
