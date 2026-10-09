@@ -11,7 +11,7 @@ export const usesBranches = (p: Pallet) => p.conveyorMode === 'branched';
 export const mainY = CONVEYOR.back;
 // The final robot has no direct side fork: its only inlet is the rounded main tail.
 export const forkArc = (robot: number, p: Pallet) => robot === tailGeometry(p).robot
-  ? beltBounds(p).right - beltBounds(p).left + tailGeometry(p).length
+  ? tailGeometry(p).right - beltBounds(p).left + tailGeometry(p).length
   : cellPose(robot, p).x - beltBounds(p).left;
 export const branchReady = (b: RelayBox, robot: number) => b.flow?.transport?.kind === 'branch' && b.flow.transport.robot === robot && b.flow.transport.arc >= BRANCH.length - .01;
 export function branchAvailable(w: RelayWorld, robot: number, box: RelayBox) {
@@ -49,7 +49,7 @@ export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet
   const pushing = w.boxes.filter(b => b.status === 'rejecting' && b.flow?.reject && time - b.flow.reject.startedAt < BRANCH.pushSeconds);
   const main = [...active.filter(b => b.flow!.transport!.kind === 'main'), ...pushing].sort((a, b) => b.flow!.transport!.arc - a.flow!.transport!.arc);
   for (const b of main) {
-    const t = b.flow!.transport!, end = beltBounds(p).right - beltBounds(p).left + tailGeometry(p).length;
+    const t = b.flow!.transport!, end = tailGeometry(p).right - beltBounds(p).left + tailGeometry(p).length;
     let limit = Math.min(end, ahead ? ahead.flow!.transport!.arc - (footprint(ahead) + footprint(b)) / 2 - BRANCH.gap : Infinity);
     if (b.status === 'rejecting') { t.limit = t.arc; t.at = time; ahead = b; continue; }
     if (!b.scan) limit = Math.min(limit, SCANNER_OFFSET + b.observation.size.w / 2);
@@ -64,7 +64,7 @@ export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet
     if (limit < t.arc - 1e-6) throw Error('메인 벨트 대기열 간격 위반');
     let proposed = Math.min(limit, t.arc + travel);
     // Chord distances, rather than arc spacing alone, protect the rounded merge.
-    if (proposed > beltBounds(p).right - beltBounds(p).left - 1500) {
+    if (proposed > tailGeometry(p).right - beltBounds(p).left - 1500) {
       const obstacles = active.filter(q => q !== b && (q.flow!.transport!.kind === 'branch' || q.flow!.transport!.arc > t.arc));
       const clear = (arc: number) => { const pt = mainPoint(p, arc); return obstacles.every(q => { const other = branchPosition(q, time, w.stream!.speed, p); return Math.hypot(pt.x - other.x, pt.y - other.y) >= (footprint(q) + footprint(b)) / 2 + BRANCH.gap - 1e-6; }); };
       if (!clear(proposed)) { let low = t.arc, high = proposed; for (let n = 0; n < 16; n++) { const mid = (low + high) / 2; if (clear(mid)) low = mid; else high = mid; } proposed = low; limit = Math.min(limit, proposed); }

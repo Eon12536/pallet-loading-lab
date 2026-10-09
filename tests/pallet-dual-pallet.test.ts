@@ -67,7 +67,7 @@ describe('two independent pallets per arm',()=>{
 });
 describe('rounded conveyor tail',()=>{
  it('removes the last direct fork in both rendering and assigned carton movement',()=>{
-  const s=fixture(),g=tailGeometry(s.pallet),end=beltBounds(s.pallet).right-beltBounds(s.pallet).left+g.length;
+  const s=fixture(),g=tailGeometry(s.pallet),end=tailGeometry(s.pallet).right-beltBounds(s.pallet).left+g.length;
   expect(forkArc(3,s.pallet)).toBe(end);expect(forkArc(2,s.pallet)).toBeLessThan(end-g.length);
   const view=createBranchedConveyorView(s.pallet),last=view.group.getObjectByName('sub-blue-conveyor-4')!;
   const bounds=new Box3().setFromObject(last);
@@ -83,21 +83,22 @@ describe('rounded conveyor tail',()=>{
   expect(current.boxes[0].flow!.transport!.arc).toBe(BRANCH.length);
  });
  it('has continuous position and tangents from main end to only the final sub-line head',()=>{
-  const p=fixture().pallet,g=tailGeometry(p),length=beltBounds(p).right-beltBounds(p).left;
+  const p=fixture().pallet,g=tailGeometry(p),length=g.right-beltBounds(p).left;
   expect(mainPoint(p,length)).toEqual(tailPoint(p,0));expect(g.robot).toBe(3);
   expect(tailPoint(p,0).y).toBe(-2500);expect(tailPoint(p,g.length).x).toBeCloseTo(g.x);expect(tailPoint(p,g.length).y).toBeCloseTo(-500);
   expect(tailPoint(p,1).x).toBeGreaterThan(tailPoint(p,0).x);expect(tailPoint(p,g.length).y).toBeGreaterThan(tailPoint(p,g.length-1).y);
-  for(let arc=1;arc<g.length;arc+=10){const a=tailPoint(p,arc),b=tailPoint(p,arc+10);expect(Math.hypot(a.x-b.x,a.y-b.y)).toBeLessThanOrEqual(10.001);}
+  for(let arc=1;arc<g.length;arc+=10){const a=tailPoint(p,arc),b=tailPoint(p,arc+10);expect(Math.hypot(a.x-b.x,a.y-b.y)).toBeLessThanOrEqual(10.001);expect(b.x).toBeGreaterThanOrEqual(a.x-1e-6);expect(b.y).toBeGreaterThanOrEqual(a.y-1e-6);expect(b.x).toBeLessThanOrEqual(g.x+1e-6);}
+  expect(g.right).toBe(g.x-g.radius);expect(g.length).toBeLessThan(2500);
  });
  it('moves a bypassed carton continuously into the last sub-line instead of dropping it at the end',()=>{
-  const s=fixture(),w=ready(s),b=w.boxes[0],length=beltBounds(s.pallet).right-beltBounds(s.pallet).left;
+  const s=fixture(),w=ready(s),b=w.boxes[0],length=tailGeometry(s.pallet).right-beltBounds(s.pallet).left;
   b.flow!.transport={kind:'main',arc:length-1,limit:length-1,at:100,attempts:0,bypass:true};b.owner=-1;
   let current=w,previous=branchPosition(b,100,210,s.pallet);
   for(let time=100.1;time<150;time+=.1){current=advanceStream(s,current,[],time).world;const next=current.boxes[0],point=branchPosition(next,time,210,s.pallet);expect(Math.hypot(point.x-previous.x,point.y-previous.y)).toBeLessThanOrEqual(21.01);expect(next.status).toBe('belt');previous=point;if(next.flow!.transport!.kind==='branch')break;}
   expect(current.boxes[0].flow!.transport!.kind).toBe('branch');expect(current.boxes[0].flow!.transport!.robot).toBe(3);
  });
  it('backs up the rounded tail while the last sub-line head is occupied without overlapping cartons',()=>{
-  const s=fixture(),w=ready(s,3),g=tailGeometry(s.pallet),length=beltBounds(s.pallet).right-beltBounds(s.pallet).left,b=w.boxes[1];
+  const s=fixture(),w=ready(s,3),g=tailGeometry(s.pallet),length=tailGeometry(s.pallet).right-beltBounds(s.pallet).left,b=w.boxes[1];
   b.status='belt';b.flow={enteredAt:0,measuredAt:90,passes:0,lastReason:'',checks:{},transport:{kind:'main',arc:length+g.length-1200,limit:length+g.length,at:100,attempts:0,bypass:true}};b.scan=scanBox(b,90,s);
   let current=w;
   for(let time=100.1;time<115;time+=.1){current=advanceStream(s,current,[],time).world;const a=branchPosition(current.boxes[0],time,210,s.pallet),c=branchPosition(current.boxes[1],time,210,s.pallet);expect(Math.hypot(a.x-c.x,a.y-c.y)).toBeGreaterThanOrEqual(Math.hypot(320,270)+BRANCH.gap-1e-5);}

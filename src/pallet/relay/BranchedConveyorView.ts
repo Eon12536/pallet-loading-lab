@@ -31,7 +31,8 @@ export function createBranchedConveyorView(p: Pallet) {
       cube(root, [.17, .04, .17], [at, -.385, side * .35], steel);
     }
   }
-  lane('main-red-conveyor', (bounds.left + bounds.right) / 2000, y, (bounds.right - bounds.left) / 1000, false, main);
+  const mainEnd = tailGeometry(p).right;
+  lane('main-red-conveyor', (bounds.left + mainEnd) / 2000, y, (mainEnd - bounds.left) / 1000, false, main);
   for (let robot = 0; robot < robotCount(p); robot++) {
     const x = cellPose(robot, p).x / 1000;
     const final = robot === tailGeometry(p).robot;
