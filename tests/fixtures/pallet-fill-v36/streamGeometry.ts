@@ -1,9 +1,9 @@
-import {usesBranches,branchPosition,branchReady,forkArc,BRANCH} from './branchedConveyor';
-import {usesRoller,rollerPoint,atRollerPickup} from './rollerQueue';
-import {beltBounds,CONVEYOR} from './conveyor';
-import {cellPose,toLocal} from './layout';
-import type {Pallet,Vec3} from '../types';
-import type {RelayBox} from './types';
+import {usesBranches,branchPosition,branchReady,forkArc,BRANCH} from '../../../src/pallet/relay/branchedConveyor';
+import {usesRoller,rollerPoint,atRollerStop} from './rollerQueue';
+import {beltBounds,CONVEYOR} from '../../../src/pallet/relay/conveyor';
+import {cellPose,toLocal} from '../../../src/pallet/relay/layout';
+import type {Pallet,Vec3} from '../../../src/pallet/types';
+import type {RelayBox} from '../../../src/pallet/relay/types';
 export const STREAM_SPEED=210;
 export function loopLength(p:Pallet){const b=beltBounds(p);return p.conveyorMode==='straight'||usesBranches(p)?b.right-b.left:2*(b.right-b.left+CONVEYOR.front-CONVEYOR.back);}
 export function loopPoint(p:Pallet,distance:number):Vec3{
@@ -17,7 +17,7 @@ export function loopPoint(p:Pallet,distance:number):Vec3{
 export const beltArc=(b:RelayBox,time:number,speed:number,p:Pallet)=>usesBranches(p)&&b.flow?.transport?Math.min(b.flow.transport.limit,b.flow.transport.arc+Math.max(0,time-b.flow.transport.at)*speed):usesRoller(p)&&b.flow?.roller?Math.min(b.flow.roller.limit,b.flow.roller.arc+Math.max(0,time-b.flow.roller.at)*160):p.conveyorMode==='straight'?Math.max(0,time-b.flow!.enteredAt)*speed:Math.max(0,time-b.flow!.enteredAt)*speed%loopLength(p);
 export const streamPosition=(b:RelayBox,time:number,speed:number,p:Pallet)=>usesBranches(p)?branchPosition(b,time,speed,p):usesRoller(p)?rollerPoint(p,beltArc(b,time,speed,p)):loopPoint(p,Math.max(0,time-b.flow!.enteredAt)*speed);
 export const stationArc=(robot:number,p:Pallet)=>cellPose(robot,p).x-beltBounds(p).left;
-export function inPickWindow(b:RelayBox,time:number,speed:number,p:Pallet,robot:number){if(usesBranches(p)){const t=b.flow?.transport;return !!t&&(t.kind==='branch'?branchReady(b,robot):t.robot===undefined&&forkArc(robot,p)>t.arc+boxRadius(b)+BRANCH.gap);}if(usesRoller(p))return atRollerPickup(b,p);const delta=beltArc(b,time,speed,p)-stationArc(robot,p);return delta>=-1050&&delta<=150;}
+export function inPickWindow(b:RelayBox,time:number,speed:number,p:Pallet,robot:number){if(usesBranches(p)){const t=b.flow?.transport;return !!t&&(t.kind==='branch'?branchReady(b,robot):t.robot===undefined&&forkArc(robot,p)>t.arc+boxRadius(b)+BRANCH.gap);}if(usesRoller(p))return atRollerStop(b,p);const delta=beltArc(b,time,speed,p)-stationArc(robot,p);return delta>=-1050&&delta<=150;}
 export function movingPickup(b:RelayBox,time:number,speed:number,p:Pallet,robot:number){const pt=toLocal(streamPosition(b,time,speed,p),robot,p);return {x:pt.x-b.observation.size.w/2,y:pt.y-b.observation.size.d/2,z:pt.z};}
 export const boxRadius=(b:RelayBox)=>Math.hypot(b.observation.size.w,b.observation.size.d)/2;
 export function entryClear(box:RelayBox,belt:RelayBox[],time:number,speed:number,p:Pallet){

@@ -1,7 +1,7 @@
-import type {Pallet,Vec3} from '../types';
-import type {RelayBox} from './types';
-import {beltBounds,CONVEYOR} from './conveyor';
-import {robotCount} from './fleet';
+import type {Pallet,Vec3} from '../../../src/pallet/types';
+import type {RelayBox} from '../../../src/pallet/relay/types';
+import {beltBounds,CONVEYOR} from '../../../src/pallet/relay/conveyor';
+import {robotCount} from '../../../src/pallet/relay/fleet';
 export const ROLLER={length:2400,deck:250,gap:100,speed:160} as const;
 export const usesRoller=(p:Pallet)=>p.conveyorMode==='straight'&&robotCount(p)===1;
 export const transportLength=(p:Pallet)=>beltBounds(p).right-beltBounds(p).left+ROLLER.length;
@@ -23,10 +23,3 @@ export function advanceQueue(items:QueueItem[],end:number,travel:number,gap:numb
  });
 }
 export function atRollerStop(b:RelayBox,p:Pallet){return !!b.flow?.roller&&Math.abs(b.flow.roller.arc-stopArc(b,p))<.01;}
-// A stopped follower may be picked only after the head has no valid placement.
-// This is a vertical lift from the existing roller, not a hidden storage buffer.
-export function atRollerPickup(b:RelayBox,p:Pallet){
- const r=b.flow?.roller;if(!r)return false;
- const belt=beltBounds(p).right-beltBounds(p).left;
- return r.arc-footprint(b)/2>=belt&&Math.abs(r.arc-r.limit)<.01;
-}

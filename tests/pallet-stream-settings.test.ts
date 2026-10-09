@@ -28,6 +28,6 @@ it('restarts a finished run with fresh clocks, reservations, observations and wo
 });
 it('rejects invalid drafts without damaging the current simulation input',()=>{
  const source=streamInventory(42,8),copy=structuredClone(source);
- for(const height of [0,NaN,Infinity,599,2001,1200.5])expect(()=>applyStreamSettings(source,{seed:42,count:8,height})).toThrow();
+ for(const height of [0,NaN,Infinity,599,3001,1200.5])expect(()=>applyStreamSettings(source,{seed:42,count:8,height})).toThrow();
  expect(source).toEqual(copy);
 });

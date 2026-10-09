@@ -5,7 +5,7 @@ import {DEFAULT_STABILITY} from '../types';
 import type {BoxType,Material} from '../types';
 
 export function streamInventory(seed:number,count=96,maxHeight=1600){
- if(!Number.isInteger(seed)||!Number.isInteger(count)||count<8||count>120||!Number.isInteger(maxHeight)||maxHeight<600||maxHeight>2000)throw Error('박스 8–120개 · 높이 600–2000 mm · 정수 시드를 입력하세요.');
+ if(!Number.isInteger(seed)||!Number.isInteger(count)||count<8||count>480||!Number.isInteger(maxHeight)||maxHeight<600||maxHeight>3000)throw Error('박스 8–480개 · 높이 600–3000 mm · 정수 시드를 입력하세요.');
  const random=rng(seed),int=(a:number,b:number)=>Math.floor(a+random()*(b-a+1));
  const families=[{name:'넓은 평형',w:[480,760],d:[360,630],h:[90,210]},
   {name:'혼합 중형',w:[270,520],d:[210,450],h:[150,330]},

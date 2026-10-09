@@ -1,4 +1,6 @@
 import {allPallets,palletToWorld,worldToPallet,palletToRobot} from './palletStations';
+import {usesRoller} from './rollerQueue';
+import {streamPosition} from './streamGeometry';
 import {robotReach} from './fleet';
 import { beltPickup,beltStation,sourcePickup,CONVEYOR } from './conveyor';
 import { Vector3 } from 'three';
@@ -80,10 +82,37 @@ export function inspectMotion(s:Scenario,w:RelayWorld,a:RelayAction):string[]{
  if(segments.some(v=>{const radius=(v.carrying?(v.tilted?Math.hypot(box.size.w,box.size.d,box.size.h):Math.hypot(box.size.w,box.size.d)):Math.hypot(g.width,g.depth))/2+g.margin;return objects.some(o=>segmentBox(worldToPallet(v.from,o.cell,s.pallet,o.pallet),worldToPallet(v.to,o.cell,s.pallet,o.pallet),o.box,radius,v.carrying?(v.tilted?2*radius:box.size.h):0,g.height));}))reasons.push('다른 작업셀 / 벨트 픽업 구역과 운반 경로 간섭');
  return [...new Set(reasons)];
 }
+// Vertical follower pickup must clear the other accumulated parcels as well.
+// Compare continuous segments, not sparse animation samples or just endpoints.
+export function inspectRollerMotion(s:Scenario,w:RelayWorld,a:RelayAction):string[]{
+ if(!usesRoller(s.pallet)||!a.path)return [];
+ const box=w.boxes.find(b=>b.observation.id===a.boxId)!.observation,g=s.constraints.gripper;
+ const obstacles=w.boxes.filter(b=>b.status==='belt'&&b.observation.id!==a.boxId).map(b=>{
+  const p=streamPosition(b,w.time,w.stream!.speed,s.pallet);
+  return {position:{x:p.x-b.observation.size.w/2,y:p.y-b.observation.size.d/2,z:p.z},size:b.observation.size} as Placement;
+ });
+ for(let i=1;i<a.path.points.length;i++){
+  const u=a.path.points[i-1],v=a.path.points[i],carrying=v.carrying;
+  const from=palletToWorld(u.tcp,a.robot,s.pallet,a.pallet),to=palletToWorld(v.tcp,a.robot,s.pallet,a.pallet);
+  const radius=(carrying?Math.hypot(box.size.w,box.size.d):Math.hypot(g.width,g.depth))/2+g.margin;
+  if(obstacles.some(o=>segmentBox(from,to,o,radius,carrying?box.size.h:0,g.height)))return ['롤러 대기 박스와 운반 경로 간섭'];
+ }
+ return [];
+}
 export function receiveConstraints(s:Scenario){
  // The shared pickup lies outside the old single-cell rectangle. Pallet boundaries,
  // height, material and load constraints stay unchanged; virtual arm reach is checked.
  return {...s.constraints,workspace:{...s.constraints.workspace,xMin:-5000,xMax:5000,yMin:-5000,yMax:5000},reach:undefined,robotMode:'gripper' as const};
+}
+export function pickupConstraints(s:Scenario,w:RelayWorld,robot:number,box:Observation,pallet=0){
+ const c=receiveConstraints(s);if(!usesRoller(s.pallet))return c;
+ const parcel=w.boxes.find(b=>b.observation.id===box.id);if(!parcel?.flow)return c;
+ const pickupTop=streamPosition(parcel,w.time,w.stream!.speed,s.pallet).z+box.size.h;
+ const stackTop=Math.max(0,...allPallets(w).filter(v=>v.robot===robot&&v.pallet===pallet).flatMap(v=>v.cell.placements.map(top)));
+ const queueTop=Math.max(0,...w.boxes.filter(b=>b.status==='belt'&&b.observation.id!==box.id&&b.flow!.measuredAt<=w.time).map(b=>streamPosition(b,w.time,w.stream!.speed,s.pallet).z+b.observation.size.h));
+ // Raise the carried box above measured queue obstacles, subject to the
+ // unchanged workspace and arm reach constraints; never ignore a collision.
+ return {...c,gripper:{...c.gripper,lift:Math.max(c.gripper.lift,queueTop+c.gripper.lift-Math.max(pickupTop,stackTop))}};
 }
 export function receivePath(s:Scenario,w:RelayWorld,box:Observation,pad:number,candidate:Placement){
  const robot=nextRobot(pad),pickup=padPickup(s,box,pad),path=parkedPath(s,gripperPath(candidate,{...box,pickupPosition:pickup},w.cells[robot].placements,receiveConstraints(s)),robot);

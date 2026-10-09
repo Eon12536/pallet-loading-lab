@@ -1,0 +1,1 @@
+V36 (7314f5f) conveyor/exchange baseline, test-only. Imports outside these five modules reuse unchanged geometry, validators and render-free helpers. Production never imports this fixture. Paired benchmark changes only queue pickup/exchange policy; carton input and static validators are identical.

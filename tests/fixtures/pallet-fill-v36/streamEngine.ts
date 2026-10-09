@@ -1,23 +1,23 @@
-import {allPallets,palletSlots,palletCell,palletState,checkKey} from './palletStations';
-import {usesBranches,advanceBranches,branchAvailable,branchReady,BRANCH} from './branchedConveyor';
-import {usesRoller,advanceQueue,transportLength,footprint,atRollerStop,atRollerPickup,ROLLER} from './rollerQueue';
-import {seededDent,scanBox,scanned,handled,SCANNER_OFFSET,REJECT_SECONDS} from './intake';
-import {resolvePlacement} from './practical';
-import {robotCount} from './fleet';
-import {ArrivalEnvironment} from '../environment';
-import {top} from '../geometry';
-import {inspectConstraints} from '../constraints';
+import {allPallets,palletSlots,palletCell,palletState,checkKey} from '../../../src/pallet/relay/palletStations';
+import {usesBranches,advanceBranches,branchAvailable,branchReady,BRANCH} from '../../../src/pallet/relay/branchedConveyor';
+import {usesRoller,advanceQueue,transportLength,footprint,atRollerStop,ROLLER} from './rollerQueue';
+import {seededDent,scanBox,scanned,handled,SCANNER_OFFSET,REJECT_SECONDS} from '../../../src/pallet/relay/intake';
+import {resolvePlacement} from '../../../src/pallet/relay/practical';
+import {robotCount} from '../../../src/pallet/relay/fleet';
+import {ArrivalEnvironment} from '../../../src/pallet/environment';
+import {top} from '../../../src/pallet/geometry';
+import {inspectConstraints} from '../../../src/pallet/constraints';
 import {receiveConstraints} from './motion';
 import {entryClear,STREAM_SPEED,loopLength} from './streamGeometry';
 import {interceptAction} from './streamPlanner';
 import type {FlowDecision} from './streamPlanner';
-import type {Scenario} from '../types';
-import type {RelayWorld,RelayMotion} from './types';
+import type {Scenario} from '../../../src/pallet/types';
+import type {RelayWorld,RelayMotion} from '../../../src/pallet/relay/types';
 let sequence=0;
 export function createStream(s:Scenario):RelayWorld{
  const count=robotCount(s.pallet),environment=new ArrivalEnvironment({...s,supplyMode:'arrival'}),boxes=Array.from({length:environment.total},(_,i)=>({observation:environment.current(i)!,owner:-1,visited:[],forwardedAt:Array(count).fill(-1),status:'pending' as const}));
  if(s.intake)for(const box of boxes){const b=box as RelayWorld['boxes'][number];b.deformation=seededDent(s.arrival.seed,b.observation.id,b.observation.size,s.intake.damageRate);}
- const initialCell=()=>({queue:[] as string[],placements:[] as import('../types').Placement[],version:0}),initialState=()=>({phase:'loading' as const,since:0,cycle:1,lastPlaced:0,rejected:[] as string[]}),dual=s.pallet.palletsPerRobot===2;
+ const initialCell=()=>({queue:[] as string[],placements:[] as import('../../../src/pallet/types').Placement[],version:0}),initialState=()=>({phase:'loading' as const,since:0,cycle:1,lastPlaced:0,rejected:[] as string[]}),dual=s.pallet.palletsPerRobot===2;
  return {...(dual?{secondaryCells:Array.from({length:count},initialCell)}:{}),runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:count},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:count},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{...(dual?{secondaryCells:Array.from({length:count},initialState)}:{}),speed:usesRoller(s.pallet)?ROLLER.speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:count},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
 }
 export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],decision:FlowDecision){
@@ -71,14 +71,14 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
   for(const item of updated){const b=lane.find(b=>b.observation.id===item.id)!,old=b.flow!.roller; b.flow!.roller={arc:item.arc,limit:item.limit,at:time,attempts:old?.attempts??0,waitingSince:old?.waitingSince};
    if(atRollerStop(b,s.pallet)&&b.flow!.roller.waitingSince===undefined)b.flow!.roller.waitingSince=time;
    if(b.status==='belt'&&atRollerStop(b,s.pallet)&&b.flow!.roller.attempts>=2&&time-b.flow!.roller.waitingSince!>=30){
-    if(!next.some(m=>m.action.robot===0)&&replaceBlockedPallet(s,w,0,time)){b.flow!.roller.attempts=0;}else if(palletSlots(w).every(slot=>palletState(w,0,slot).phase==='loading'&&!palletCell(w,0,slot).placements.length)){b.status='outfeed';b.flow!.lastReason=w.secondaryCells?'두 팔레트에도 배치 불가 · 수동 처리 대기':'빈 팔레트에도 배치 불가 · 수동 처리 대기 · 롤러 대기열에서 제외';w.revision++;}
+    if(replaceBlockedPallet(w,0,time)){b.flow!.roller.attempts=0;}else if(palletSlots(w).every(slot=>palletState(w,0,slot).phase==='loading')){b.status='outfeed';b.flow!.lastReason=w.secondaryCells?'두 팔레트에도 배치 불가 · 수동 처리 대기':'빈 팔레트에도 배치 불가 · 수동 처리 대기 · 롤러 대기열에서 제외';w.revision++;}
    }
   }
  }
  if(usesBranches(s.pallet)){
   advanceBranches(w,next,s.pallet,world.time,s.constraints.gripper.speed);
   for(const b of w.boxes){const t=b.flow?.transport;if(b.status!=='belt'||!t||t.kind!=='branch'||!branchReady(b,t.robot!)||t.attempts<2||time-(t.waitingSince??time)<BRANCH.waitSeconds)continue;
-   if(!next.some(m=>m.action.robot===t.robot)&&replaceBlockedPallet(s,w,t.robot!,time)){t.attempts=0;}else if(palletSlots(w).every(slot=>palletState(w,t.robot!,slot).phase==='loading')){b.status='outfeed';b.flow!.lastReason='서브 선두 · 두 팔레트 배치 불가 · 수동 처리 대기';w.revision++;}
+   if(replaceBlockedPallet(w,t.robot!,time)){t.attempts=0;}else if(palletSlots(w).every(slot=>palletState(w,t.robot!,slot).phase==='loading')){b.status='outfeed';b.flow!.lastReason='서브 선두 · 두 팔레트 배치 불가 · 수동 처리 대기';w.revision++;}
   }
  }
  const pending=w.boxes.find(b=>b.status==='pending');
@@ -122,23 +122,7 @@ export function assertStreamInventory(w:RelayWorld,motions:RelayMotion[]){
  if(stored.some(id=>!ids.includes(id))||reserved.some(id=>!ids.includes(id)))throw Error('알 수 없는 박스');return true;
 }
 
-function replaceBlockedPallet(s:Scenario,w:RelayWorld,robot:number,time:number){
+function replaceBlockedPallet(w:RelayWorld,robot:number,time:number){
  const target=allPallets(w).find(p=>p.robot===robot&&p.state!.phase==='loading'&&p.cell.placements.length);
- if(!target)return false;
- if(usesRoller(s.pallet)){
-  // One blocked FIFO head is not proof that this pallet is full. Re-evaluate
-  // the stopped followers on the latest placement version before exchanging.
-  if(time-target.state!.lastPlaced<30)return false;
-  const waiting=w.boxes.filter(b=>b.status==='belt'&&b.observation.status!=='damaged'&&scanned(b,time,s)&&atRollerPickup(b,s.pallet));
-  const ck=checkKey(w,robot,target.pallet);
-  const rejected=waiting.filter(b=>target.state!.rejected.includes(b.observation.id)&&b.flow!.checks[ck]?.version===target.cell.version);
-  const finalBatch=w.stream!.inputClosed&&w.boxes.filter(b=>!handled(b)).every(b=>rejected.includes(b));
-  const stopped=w.boxes.filter(b=>b.status==='belt'&&b.flow?.roller&&Math.abs(b.flow.roller.arc-b.flow.roller.limit)<.01);
-  // Large cartons may fill the roller with fewer than three fully supported
-  // pickup positions. A backed-up lane is saturation evidence, not a time-out
-  // on one head; every accessible parcel still needs a fresh rejection.
-  const backedUp=stopped.length>=3;
-  if(!waiting.length||rejected.length!==waiting.length||(!finalBatch&&!backedUp))return false;
- }
- target.state!.phase='checking';target.state!.since=time;w.revision++;return true;
+ if(!target)return false;target.state!.phase='checking';target.state!.since=time;w.revision++;return true;
 }
