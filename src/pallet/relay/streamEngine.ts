@@ -14,6 +14,8 @@ import type {FlowDecision} from './streamPlanner';
 import type {Scenario} from '../types';
 import type {RelayWorld,RelayMotion} from './types';
 let sequence=0;
+// The dedicated fleet demo alone accelerates transport and release cadence.
+const conveyorRate=(s:Scenario)=>s.clusterPreset?.demonstration?1.5:1;
 // A timeout or blocked parcel is not evidence of a full pallet. Keep short
 // stacks in the cell, including the final partial load after supply ends.
 export const DEPARTURE_HEIGHT_RATIO=.96;
@@ -32,7 +34,7 @@ export function createStream(s:Scenario):RelayWorld{
  const count=robotCount(s.pallet),environment=new ArrivalEnvironment({...s,supplyMode:'arrival'}),boxes=Array.from({length:environment.total},(_,i)=>({observation:environment.current(i)!,owner:-1,visited:[],forwardedAt:Array(count).fill(-1),status:'pending' as const}));
  if(s.intake)for(const box of boxes){const b=box as RelayWorld['boxes'][number];b.deformation=seededDent(s.arrival.seed,b.observation.id,b.observation.size,s.intake.damageRate);}
  const initialCell=()=>({queue:[] as string[],placements:[] as import('../types').Placement[],version:0}),initialState=()=>({phase:'loading' as const,since:0,cycle:1,lastPlaced:0,rejected:[] as string[]}),dual=s.pallet.palletsPerRobot===2;
- return {...(dual?{secondaryCells:Array.from({length:count},initialCell)}:{}),runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:count},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:count},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{...(dual?{secondaryCells:Array.from({length:count},initialState)}:{}),speed:usesRoller(s.pallet)?ROLLER.speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:count},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
+ return {...(dual?{secondaryCells:Array.from({length:count},initialCell)}:{}),runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:count},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:count},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{...(dual?{secondaryCells:Array.from({length:count},initialState)}:{}),speed:usesRoller(s.pallet)?ROLLER.speed:STREAM_SPEED*conveyorRate(s),nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:count},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
 }
 export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],decision:FlowDecision){
  if(decision.runId!==world.runId||decision.cellVersions?.some((v,i)=>v!==allPallets(world)[i]?.cell.version))return {world,motions};
@@ -101,7 +103,7 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
  if(pending&&time>=flow.nextInfeed&&entryClear(pending,belt,time,flow.speed,s.pallet)){
   pending.status='belt';pending.flow={enteredAt:time,measuredAt:usesRoller(s.pallet)||usesBranches(s.pallet)?Infinity:time+(SCANNER_OFFSET+(s.intake?pending.observation.size.w/2:0))/flow.speed+.25,passes:0,lastReason:'이동 중 계측',checks:{}};if(usesRoller(s.pallet))pending.flow.roller={arc:0,limit:transportLength(s.pallet)-footprint(pending)/2,at:time,attempts:0};if(usesBranches(s.pallet))pending.flow.transport={kind:'main',arc:0,limit:0,at:time,attempts:0};flow.entered++;w.revision++;
   // Seeded irregular release intervals plus physical belt clearance; no overlapping spawn.
-  const jitter=((s.arrival.seed*31+flow.entered*7919)%997)/997;flow.nextInfeed=time+2.6+jitter*2.6;
+  const jitter=((s.arrival.seed*31+flow.entered*7919)%997)/997;flow.nextInfeed=time+(2.6+jitter*2.6)/conveyorRate(s);
  }
  flow.inputClosed=!w.boxes.some(b=>b.status==='pending');
  for(const b of w.boxes){if(!b.flow)continue;
