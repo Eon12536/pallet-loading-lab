@@ -14,3 +14,5 @@
 
 /* Hallmark review: preserve engineering hierarchy; null is distinct from zero. P4 H4 E4 S4 R4 V4. */
 .bench-grid polygon:last-of-type{stroke:var(--bench-muted);stroke-width:1.15}.bench-fill{fill:currentColor;fill-opacity:.09;stroke-width:1.7}.bench-charts svg text.bench-null{font-size:8px;fill:var(--bench-warn)}.bench-charts .bench-axis-label text{font-size:10px}.bench-preset{width:100%;margin:6px 0}.bench-measurement-note{border-left:2px solid var(--bench-warn);padding-left:10px}
+
+.bench-radar .bench-grid polygon{vector-effect:non-scaling-stroke;stroke-width:1}.bench-radar .bench-grid polygon:last-of-type{stroke-width:1.5}.bench-radar .bench-partial{stroke:none;fill-opacity:.07}.bench-radar .bench-gap{stroke-dasharray:5 4;opacity:.65}.bench-radar .bench-unmeasured{fill:var(--bench-panel);stroke:var(--bench-warn);stroke-width:1.5}.bench-radar .bench-radar-empty{fill:var(--bench-ink);font-size:11px;paint-order:stroke;stroke:var(--bench-panel);stroke-width:5px;stroke-linejoin:round}.bench-radar .bench-radar-key{font-size:9px}
