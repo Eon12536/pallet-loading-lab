@@ -10,6 +10,7 @@ export const CONVEYOR = { speed:600, width:900, deck:450, front:-500, back:-2500
 export function beltBounds(p:Pallet) {
   const extra=p.conveyorExtensionMm??0;
   if(!Number.isInteger(extra)||extra<0||extra>4000)throw Error('벨트 추가 길이는 양 끝 각각 0–4000 mm 정수로 입력하세요.');
+  if(p.conveyorMode==='straight'&&robotCount(p)===1){const right=cellPose(0,p).x-2400;return {left:right-4600-extra*2,right};}
   return { left:cellPose(0,p).x-(p.conveyorMode==='straight'?3000:1600)-extra, right:cellPose(robotCount(p)-1,p).x+1600+extra };
 }
 export function beltStation(robot:number,p:Pallet):Vec3 {

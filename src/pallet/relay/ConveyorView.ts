@@ -1,3 +1,4 @@
+import {usesRoller,ROLLER,rollerPoint} from './rollerQueue';
 import * as THREE from 'three';
 import type { Pallet } from '../types';
 import { CONVEYOR,beltBounds,beltStation } from './conveyor';
@@ -30,6 +31,19 @@ export function createConveyorView(p:Pallet) {
   }
   run((left+right)/2,front,right-left);if(p.conveyorMode!=='straight'){run((left+right)/2,back,right-left,false,true);
   run(left,(front+back)/2,front-back+width,true);run(right,(front+back)/2,front-back+width,true,true);}
+  const rollers:THREE.Mesh[]=[];
+  if(usesRoller(p)){
+    const lane=new THREE.Group();lane.name='gravity-roller-accumulation';group.add(lane);
+    const orange=new THREE.MeshStandardMaterial({color:'#be682c',metalness:.35,roughness:.6});
+    const start=rollerPoint(p,b.right-b.left),end=rollerPoint(p,b.right-b.left+ROLLER.length);
+    const length=Math.hypot(end.x-start.x,end.z-start.z)/1000,angle=Math.atan2(end.z-start.z,end.x-start.x);
+    for(const side of [-1,1]){const rail=new THREE.Mesh(new THREE.BoxGeometry(length,.12,.065),orange);rail.position.set((start.x+end.x)/2000,(start.z+end.z)/2000-.045,front+side*(width/2+.025));rail.rotation.z=angle;lane.add(rail);}
+    const rollerGeo=new THREE.CylinderGeometry(.035,.035,width,12),rollerMat=new THREE.MeshStandardMaterial({color:'#a6aaa7',metalness:.78,roughness:.25});
+    for(let arc=65;arc<ROLLER.length;arc+=95){const pt=rollerPoint(p,b.right-b.left+arc),mesh=new THREE.Mesh(rollerGeo,rollerMat);mesh.rotation.x=Math.PI/2;mesh.position.set(pt.x/1000,pt.z/1000-.035,pt.y/1000);mesh.castShadow=true;lane.add(mesh);rollers.push(mesh);}
+    for(const x of [start.x+200,end.x-150])for(const side of [-1,1]){const pt=rollerPoint(p,x-b.left),leg=new THREE.Mesh(new THREE.BoxGeometry(.065,pt.z/1000+.35,.065),steel);leg.position.set(x/1000,(pt.z/1000-.45)/2,front+side*.35);lane.add(leg);}
+    const stop=new THREE.Mesh(new THREE.BoxGeometry(.055,.15,width+.12),orange);stop.position.set(end.x/1000+.03,end.z/1000+.03,front);lane.add(stop);
+    const stopSensor=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.09),markings);stopSensor.position.set(end.x/1000-.06,end.z/1000+.1,front+.5);lane.add(stopSensor);
+  }
   const frame=new THREE.InstancedMesh(geometry,steel,parts.length),dummy=new THREE.Object3D();
   parts.forEach((v,i)=>{dummy.position.set(v.x,v.y,v.z);dummy.scale.set(v.w,v.h,v.d);dummy.updateMatrix();frame.setMatrixAt(i,dummy.matrix);});frame.castShadow=true;group.add(frame);
   for(let i=0;i<robotCount(p);i++){
@@ -46,6 +60,7 @@ export function createConveyorView(p:Pallet) {
   const laser=new THREE.Mesh(new THREE.PlaneGeometry(1.05,1.02),new THREE.MeshBasicMaterial({color:'#548a87',transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));
   laser.rotation.y=Math.PI/2;laser.position.set(left+.65,z+.51,front);portal.add(laser);
   return {group,update:(time:number,active=false,rejected=false)=>{
+   rollers.forEach(mesh=>{mesh.rotation.y=-time*ROLLER.speed/35;});
    animated.forEach((t,i)=>{t.offset.x=(i===1||i===3?1:-1)*time*CONVEYOR.speed/220;});
    const color=rejected?TWIN_ROBOT_PALETTE.warning:'#548a87';signal.color.set(color);signal.emissive.set(color);signal.emissiveIntensity=active?.7:.2;
    laser.material.color.set(color);laser.material.opacity=active?.2:.06;

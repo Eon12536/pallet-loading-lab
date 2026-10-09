@@ -1,3 +1,4 @@
+import {usesRoller,ROLLER} from './rollerQueue';
 import {beltBounds,CONVEYOR} from './conveyor';
 import type {Dimensions,Pallet,Vec3} from '../types';
 import type {RelayBox,RelayMotion} from './types';
@@ -9,5 +10,5 @@ export function exitDisplayCenter(p:Pallet,size:Dimensions,boxes:readonly RelayB
  const widest=Math.max(size.w,...boxes.map(b=>b.observation.size.w));
  // The last moving carton can extend half its width beyond the end.
  // Keep a real gap to the full stationary carton, not merely to its centre.
- return {x:beltBounds(p).right+widest/2+size.w/2+100,y:CONVEYOR.front,z:CONVEYOR.deck+size.h/2};
+ return {x:beltBounds(p).right+(usesRoller(p)?ROLLER.length:0)+widest/2+size.w/2+100,y:CONVEYOR.front,z:CONVEYOR.deck+size.h/2};
 }

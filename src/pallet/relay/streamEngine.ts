@@ -1,3 +1,4 @@
+import {usesRoller,advanceQueue,transportLength,footprint,atRollerStop,ROLLER} from './rollerQueue';
 import {seededDent,scanBox,scanned,handled,SCANNER_OFFSET,REJECT_SECONDS} from './intake';
 import {resolvePlacement} from './practical';
 import {robotCount} from './fleet';
@@ -14,7 +15,7 @@ let sequence=0;
 export function createStream(s:Scenario):RelayWorld{
  const count=robotCount(s.pallet),environment=new ArrivalEnvironment({...s,supplyMode:'arrival'}),boxes=Array.from({length:environment.total},(_,i)=>({observation:environment.current(i)!,owner:-1,visited:[],forwardedAt:Array(count).fill(-1),status:'pending' as const}));
  if(s.intake)for(const box of boxes){const b=box as RelayWorld['boxes'][number];b.deformation=seededDent(s.arrival.seed,b.observation.id,b.observation.size,s.intake.damageRate);}
- return {runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:count},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:count},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:count},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
+ return {runId:`flow-${s.arrival.seed}-${++sequence}`,revision:0,cursor:0,boxes,cells:Array.from({length:count},()=>({queue:[],placements:[],version:0})),pads:Array.from({length:count},()=>({boxId:null,version:0,departedAt:0,readyAt:0,arrived:true})),records:[],time:0,stream:{speed:usesRoller(s.pallet)?ROLLER.speed:STREAM_SPEED,nextInfeed:0,entered:0,measured:0,passes:0,complete:false,inputClosed:false,cells:Array.from({length:count},()=>({phase:'loading',since:0,cycle:1,lastPlaced:0,rejected:[]})),dispatched:[]}};
 }
 export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],decision:FlowDecision){
  if(decision.runId!==world.runId||decision.cellVersions?.some((v,i)=>v!==world.cells[i]?.version))return {world,motions};
@@ -31,7 +32,8 @@ export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],
   const reason=action?proposal.reason:proposal.candidates.length?`${[...new Set(failures)].slice(0,2).join(' / ')||'현재 예약 불가'} · 다음 구역으로 통과`:proposal.reason;
   b.flow!.checks[proposal.robot]={version:proposal.cellVersion,at:w.time,reason,blocked:proposal.blocked,tested:proposal.tested};b.flow!.lastReason=reason;
   if(action){b.status='reserved';b.owner=proposal.robot;next.push({action,started:w.time,elapsed:0,progress:0});w.revision++;}
-  else if(!proposal.candidates.length||failures.some(r=>!r.includes('예약')&&!r.includes('구간'))){const cell=w.stream!.cells[proposal.robot];if(!cell.rejected.includes(b.observation.id))cell.rejected.push(b.observation.id);}
+  else if(usesRoller(s.pallet)&&b.flow!.roller){b.flow!.roller.attempts++;}
+  if(!action&&(!proposal.candidates.length||failures.some(r=>!r.includes('예약')&&!r.includes('구간')))){const cell=w.stream!.cells[proposal.robot];if(!cell.rejected.includes(b.observation.id))cell.rejected.push(b.observation.id);}
  }
  return {world:w,motions:next};
 }
@@ -54,22 +56,34 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
   flow.cells[a.robot].lastPlaced=time;flow.cells[a.robot].rejected=[];
   w.records.push({step:w.records.length+1,kind:'place',robot:a.robot,boxId:a.boxId,from:a.robot,reason:a.reason,position:checked.placement.position,started:m.started,finished:m.started+a.seconds});
  }
+ if(usesRoller(s.pallet)){
+  const lane=w.boxes.filter(b=>b.status==='belt'||b.status==='reserved'&&next.some(m=>m.action.boxId===b.observation.id&&time<m.action.tracking!.graspAt+(b.observation.size.h+100)/s.constraints.gripper.speed));
+  const updated=advanceQueue(lane.map(b=>({id:b.observation.id,arc:b.flow!.roller?.arc??0,length:footprint(b),held:b.status==='reserved'})),transportLength(s.pallet),Math.max(0,time-world.time)*ROLLER.speed);
+  for(const item of updated){const b=lane.find(b=>b.observation.id===item.id)!,old=b.flow!.roller; b.flow!.roller={arc:item.arc,limit:item.limit,at:time,attempts:old?.attempts??0,waitingSince:old?.waitingSince};
+   if(atRollerStop(b,s.pallet)&&b.flow!.roller.waitingSince===undefined)b.flow!.roller.waitingSince=time;
+   if(b.status==='belt'&&atRollerStop(b,s.pallet)&&b.flow!.roller.attempts>=2&&time-b.flow!.roller.waitingSince!>=30){
+    const state=flow.cells[0];if(w.cells[0].placements.length&&state.phase==='loading'){state.phase='checking';state.since=time;b.flow!.roller.attempts=0;w.revision++;}
+    else if(!w.cells[0].placements.length&&state.phase==='loading'){b.status='outfeed';b.flow!.lastReason='빈 팔레트에도 배치 불가 · 수동 처리 대기 · 롤러 대기열에서 제외';w.revision++;}
+   }
+  }
+ }
  const pending=w.boxes.find(b=>b.status==='pending');
  const belt=w.boxes.filter(b=>b.status==='belt'||b.status==='rejecting'||b.status==='reserved'&&next.some(m=>m.action.boxId===b.observation.id&&time<m.action.tracking!.graspAt));
  if(pending&&time>=flow.nextInfeed&&entryClear(pending,belt,time,flow.speed,s.pallet)){
-  pending.status='belt';pending.flow={enteredAt:time,measuredAt:time+(SCANNER_OFFSET+(s.intake?pending.observation.size.w/2:0))/flow.speed+.25,passes:0,lastReason:'이동 중 계측',checks:{}};flow.entered++;w.revision++;
+  pending.status='belt';pending.flow={enteredAt:time,measuredAt:usesRoller(s.pallet)?Infinity:time+(SCANNER_OFFSET+(s.intake?pending.observation.size.w/2:0))/flow.speed+.25,passes:0,lastReason:'이동 중 계측',checks:{}};if(usesRoller(s.pallet))pending.flow.roller={arc:0,limit:transportLength(s.pallet)-footprint(pending)/2,at:time,attempts:0};flow.entered++;w.revision++;
   // Seeded irregular release intervals plus physical belt clearance; no overlapping spawn.
   const jitter=((s.arrival.seed*31+flow.entered*7919)%997)/997;flow.nextInfeed=time+2.6+jitter*2.6;
  }
  flow.inputClosed=!w.boxes.some(b=>b.status==='pending');
  for(const b of w.boxes){if(!b.flow)continue;
+  if(usesRoller(s.pallet)&&b.status==='belt'&&b.flow.measuredAt===Infinity&&b.flow.roller!.arc>=SCANNER_OFFSET+b.observation.size.w/2)b.flow.measuredAt=time;
   if(world.time<b.flow.measuredAt&&time>=b.flow.measuredAt){
    flow.measured++;b.flow.lastReason='계측 완료 · 접근하는 작업셀에서 선별';
    if(s.intake){b.scan=scanBox(b,b.flow.measuredAt,s);if(b.scan.verdict==='damaged'){b.observation.status='damaged';b.status='rejecting';b.flow.lastReason=`찌그러짐 ${b.scan.deviationMm.toFixed(1)} mm 검출 · 격리 이송`;}}
    w.revision++;
   }
   if(b.status==='rejecting'&&time>=b.flow.measuredAt+REJECT_SECONDS){b.status='quarantined';b.flow.lastReason='찌그러짐 검출 · 격리 완료 · 적재 대상 제외';w.revision++;}
-  if(b.status==='belt'&&s.pallet.conveyorMode==='straight'&&(time-b.flow.enteredAt)*flow.speed>=loopLength(s.pallet)){b.status='outfeed';b.flow.lastReason='집기 구간 통과 · 출구 대기 · 미적재';w.revision++;}
+  if(b.status==='belt'&&s.pallet.conveyorMode==='straight'&&!usesRoller(s.pallet)&&(time-b.flow.enteredAt)*flow.speed>=loopLength(s.pallet)){b.status='outfeed';b.flow.lastReason='집기 구간 통과 · 출구 대기 · 미적재';w.revision++;}
   if(b.status==='belt'&&s.pallet.conveyorMode!=='straight'){const laps=Math.floor((time-b.flow.enteredAt)*flow.speed/loopLength(s.pallet));if(laps>b.flow.passes){flow.passes+=laps-b.flow.passes;b.flow.passes=laps;}}
  }
  const allPlaced=w.boxes.every(handled);
