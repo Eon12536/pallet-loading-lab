@@ -14,6 +14,20 @@ import type {FlowDecision} from './streamPlanner';
 import type {Scenario} from '../types';
 import type {RelayWorld,RelayMotion} from './types';
 let sequence=0;
+// A timeout or blocked parcel is not evidence of a full pallet. Keep short
+// stacks in the cell, including the final partial load after supply ends.
+export const DEPARTURE_HEIGHT_RATIO=.96;
+const departureReady=(s:Scenario,placements:import('../types').Placement[])=>placements.length>0&&Math.max(...placements.map(top))>=s.pallet.maxHeight*DEPARTURE_HEIGHT_RATIO;
+function freshlyBlocked(w:RelayWorld,robot:number,b:RelayWorld['boxes'][number]){
+ return palletSlots(w).every(slot=>{
+  const cell=palletCell(w,robot,slot),state=palletState(w,robot,slot),check=b.flow?.checks[checkKey(w,robot,slot)];
+  return state.phase==='loading'&&state.rejected.includes(b.observation.id)&&check?.version===cell.version&&!/보류|예약|구간|후속|받침|중앙/.test(check.reason);
+ });
+}
+function pickupLaneBlocked(s:Scenario,w:RelayWorld,robot:number){
+ const waiting=w.boxes.filter(b=>b.status==='belt'&&b.observation.status!=='damaged'&&scanned(b,w.time,s)&&(usesRoller(s.pallet)?atRollerPickup(b,s.pallet):branchReady(b,robot)));
+ return waiting.length>0&&waiting.every(b=>freshlyBlocked(w,robot,b));
+}
 export function createStream(s:Scenario):RelayWorld{
  const count=robotCount(s.pallet),environment=new ArrivalEnvironment({...s,supplyMode:'arrival'}),boxes=Array.from({length:environment.total},(_,i)=>({observation:environment.current(i)!,owner:-1,visited:[],forwardedAt:Array(count).fill(-1),status:'pending' as const}));
  if(s.intake)for(const box of boxes){const b=box as RelayWorld['boxes'][number];b.deformation=seededDent(s.arrival.seed,b.observation.id,b.observation.size,s.intake.damageRate);}
@@ -71,14 +85,14 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
   for(const item of updated){const b=lane.find(b=>b.observation.id===item.id)!,old=b.flow!.roller; b.flow!.roller={arc:item.arc,limit:item.limit,at:time,attempts:old?.attempts??0,waitingSince:old?.waitingSince};
    if(atRollerStop(b,s.pallet)&&b.flow!.roller.waitingSince===undefined)b.flow!.roller.waitingSince=time;
    if(b.status==='belt'&&atRollerStop(b,s.pallet)&&b.flow!.roller.attempts>=2&&time-b.flow!.roller.waitingSince!>=30){
-    if(!next.some(m=>m.action.robot===0)&&replaceBlockedPallet(s,w,0,time)){b.flow!.roller.attempts=0;}else if(palletSlots(w).every(slot=>palletState(w,0,slot).phase==='loading'&&!palletCell(w,0,slot).placements.length)){b.status='outfeed';b.flow!.lastReason=w.secondaryCells?'두 팔레트에도 배치 불가 · 수동 처리 대기':'빈 팔레트에도 배치 불가 · 수동 처리 대기 · 롤러 대기열에서 제외';w.revision++;}
+    if(!next.some(m=>m.action.robot===0)&&replaceBlockedPallet(s,w,0,time)){b.flow!.roller.attempts=0;}else if(!next.some(m=>m.action.robot===0)&&pickupLaneBlocked(s,w,0)){b.status='outfeed';b.flow!.lastReason=palletSlots(w).every(slot=>!palletCell(w,0,slot).placements.length)?'빈 팔레트에도 배치 불가 · 수동 처리 대기':'현재 팔레트에 배치 불가 · 박스만 수동 처리 대기 · 낮은 팔레트 유지';w.revision++;}
    }
   }
  }
  if(usesBranches(s.pallet)){
   advanceBranches(w,next,s.pallet,world.time,s.constraints.gripper.speed);
   for(const b of w.boxes){const t=b.flow?.transport;if(b.status!=='belt'||!t||t.kind!=='branch'||!branchReady(b,t.robot!)||t.attempts<2||time-(t.waitingSince??time)<BRANCH.waitSeconds)continue;
-   if(!next.some(m=>m.action.robot===t.robot)&&replaceBlockedPallet(s,w,t.robot!,time)){t.attempts=0;}else if(palletSlots(w).every(slot=>palletState(w,t.robot!,slot).phase==='loading')){b.status='outfeed';b.flow!.lastReason='서브 선두 · 두 팔레트 배치 불가 · 수동 처리 대기';w.revision++;}
+   if(!next.some(m=>m.action.robot===t.robot)&&replaceBlockedPallet(s,w,t.robot!,time)){t.attempts=0;}else if(!next.some(m=>m.action.robot===t.robot)&&pickupLaneBlocked(s,w,t.robot!)){b.status='outfeed';b.flow!.lastReason='서브 선두 · 현재 팔레트에 배치 불가 · 박스만 수동 처리 대기 · 낮은 팔레트 유지';w.revision++;}
   }
  }
  const pending=w.boxes.find(b=>b.status==='pending');
@@ -102,17 +116,15 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
  }
  const allPlaced=w.boxes.every(handled);
  allPallets(w).forEach(({state:current,robot,pallet,cell})=>{
-  const state=current!,busy=next.some(m=>m.action.robot===robot),height=Math.max(0,...cell.placements.map(top));
-  const remaining=w.boxes.filter(b=>!handled(b)),exhausted=!remaining.some(b=>b.status==='pending'||b.status==='reserved'||!state.rejected.includes(b.observation.id));
-  const reconsiderSeconds=loopLength(s.pallet)/flow.speed*1.1;
-  if(state.phase==='loading'&&!busy&&cell.placements.length&&(allPlaced||height>=s.pallet.maxHeight*.96||(state.rejected.length>=6||exhausted)&&time-state.lastPlaced>reconsiderSeconds)){
+  const state=current!,busy=next.some(m=>m.action.robot===robot);
+  if(state.phase==='loading'&&!busy&&departureReady(s,cell.placements)){
    state.phase='checking';state.since=time;w.revision++;
   }else if(state.phase==='checking'&&time-state.since>=3){state.phase='outbound';state.since=time;w.revision++;}
   else if(state.phase==='outbound'&&time-state.since>=9){
    flow.dispatched.push({robot,pallet,cycle:state.cycle,placements:structuredClone(cell.placements),at:time});cell.placements=[];cell.version++;state.phase='returning';state.since=time;w.revision++;
   }else if(state.phase==='returning'&&time-state.since>=9){state.phase='loading';state.since=time;state.cycle++;state.rejected=[];state.lastPlaced=time;w.revision++;}
  });
- flow.complete=allPlaced&&!next.length&&allPallets(w).every(({cell,state})=>state!.phase==='loading'&&!cell.placements.length);
+ flow.complete=allPlaced&&!next.length&&allPallets(w).every(({state})=>state!.phase==='loading');
  assertStreamInventory(w,next);return {world:w,motions:next};
 }
 export function assertStreamInventory(w:RelayWorld,motions:RelayMotion[]){
@@ -123,7 +135,7 @@ export function assertStreamInventory(w:RelayWorld,motions:RelayMotion[]){
 }
 
 function replaceBlockedPallet(s:Scenario,w:RelayWorld,robot:number,time:number){
- const target=allPallets(w).find(p=>p.robot===robot&&p.state!.phase==='loading'&&p.cell.placements.length);
+ const target=allPallets(w).find(p=>p.robot===robot&&p.state!.phase==='loading'&&departureReady(s,p.cell.placements));
  if(!target)return false;
  if(usesRoller(s.pallet)){
   // One blocked FIFO head is not proof that this pallet is full. Re-evaluate

@@ -58,7 +58,7 @@ it('permits a taller-than-footprint limit without changing the cartons or safety
  expect(next.types).toEqual(s.types);expect(next.constraints).toEqual(s.constraints);
 });
 
-it('exchanges a saturated lane even when only two large cartons fit fully on the roller',()=>{
+it('keeps a low pallet even when rejected large cartons saturate the roller',()=>{
  const {s,w,head,follower}=fixture(),third=w.boxes[3];
  w.stream!.inputClosed=false;w.boxes[4].status='pending';
  for(const [i,b] of [head,follower,third].entries()){
@@ -68,7 +68,57 @@ it('exchanges a saturated lane even when only two large cartons fit fully on the
  }
  expect(atRollerPickup(head,s.pallet)).toBe(true);expect(atRollerPickup(follower,s.pallet)).toBe(true);expect(atRollerPickup(third,s.pallet)).toBe(false);
  w.stream!.cells[0].rejected=[head.observation.id,follower.observation.id];
- expect(advanceStream(s,w,[],100).world.stream!.cells[0].phase).toBe('checking');
+ const result=advanceStream(s,w,[],100).world;
+ expect(result.stream!.cells[0].phase).toBe('loading');
+ expect(result.cells[0].placements).toHaveLength(1);
+ expect(result.boxes[1].status).toBe('outfeed');
+ expect(result.boxes[1].flow!.lastReason).toContain('낮은 팔레트 유지');
+});
+
+it('retains a final partial pallet and finishes without an outbound cycle',()=>{
+ const {s,w}=fixture();w.boxes.slice(1).forEach(b=>b.status='outfeed');
+ const result=advanceStream(s,w,[],500).world;
+ expect(result.stream!.complete).toBe(true);
+ expect(result.stream!.cells[0].phase).toBe('loading');
+ expect(result.cells[0].placements).toHaveLength(1);
+ expect(result.stream!.dispatched).toHaveLength(0);
+});
+
+it('does not use six rejection records or a timeout to ship a low looping pallet',()=>{
+ const {s,w}=fixture();s.pallet.conveyorMode='loop';
+ w.boxes.slice(1).forEach(b=>{b.status='belt';b.flow={enteredAt:490,measuredAt:0,passes:0,lastReason:'배치 불가',checks:{}};});
+ w.stream!.cells[0].rejected=w.boxes.slice(1).map(b=>b.observation.id);
+ const result=advanceStream(s,w,[],500).world;
+ expect(result.stream!.cells[0].phase).toBe('loading');
+ expect(result.cells[0].placements).toHaveLength(1);
+ expect(result.stream!.complete).toBe(false);
+});
+
+it('never ships a low branched pallet when its current head is infeasible',()=>{
+ const {s,w,head}=fixture();s.pallet.conveyorMode='branched';
+ head.flow!.roller=undefined;head.flow!.transport={kind:'branch',robot:0,arc:2000,limit:2000,at:100,attempts:2,waitingSince:0};
+ w.boxes[2].status='outfeed';
+ w.stream!.cells[0].rejected=[head.observation.id];
+ head.flow!.checks[0]={version:0,at:90,reason:'높이 초과',blocked:0,tested:0};
+ const result=advanceStream(s,w,[],100).world;
+ expect(result.stream!.cells[0].phase).toBe('loading');
+ expect(result.cells[0].placements).toHaveLength(1);
+ expect(result.boxes[1].status).toBe('outfeed');
+});
+
+it('still exchanges a stack at the existing 96 percent height target',()=>{
+ const {s,w}=fixture();w.cells[0].placements[0].size.h=576;
+ w.boxes.slice(1).forEach(b=>b.status='outfeed');
+ let result=advanceStream(s,w,[],100).world;
+ expect(result.stream!.cells[0].phase).toBe('checking');
+ expect(result.stream!.complete).toBe(false);
+ result=advanceStream(s,result,[],103).world;
+ expect(result.stream!.cells[0].phase).toBe('outbound');
+ result=advanceStream(s,result,[],112).world;
+ expect(result.stream!.dispatched).toHaveLength(1);
+ expect(result.stream!.dispatched[0].placements[0].size.h).toBe(576);
+ result=advanceStream(s,result,[],121).world;
+ expect(result.stream!.complete).toBe(true);
 });
 
 it('uses aspect ratio as a preference while preserving hard support, load and tipping limits',()=>{

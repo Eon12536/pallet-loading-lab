@@ -1,0 +1,20 @@
+{
+  "seed": 42,
+  "input": 240,
+  "heightLimitMm": 2200,
+  "automaticDepartureMinimumMm": 2112,
+  "complete": true,
+  "placed": 75,
+  "dispatched": [],
+  "retained": [
+    {
+      "count": 75,
+      "heightMm": 1661
+    }
+  ],
+  "manualWaiting": 128,
+  "quarantined": 37,
+  "elapsedSimSeconds": 5441,
+  "elapsedComputeMs": 90212.1185,
+  "scope": "Existing static/contact/load and gripper geometry checks; actual hardware unverified"
+}
