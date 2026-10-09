@@ -1,3 +1,4 @@
+import {usesBranches,advanceBranches,branchAvailable,branchReady,BRANCH} from './branchedConveyor';
 import {usesRoller,advanceQueue,transportLength,footprint,atRollerStop,ROLLER} from './rollerQueue';
 import {seededDent,scanBox,scanned,handled,SCANNER_OFFSET,REJECT_SECONDS} from './intake';
 import {resolvePlacement} from './practical';
@@ -26,6 +27,11 @@ export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],
  for(const proposal of proposals){
   const b=w.boxes.find(b=>b.observation.id===proposal.boxId);
   if(!b||b.status!=='belt'||b.observation.status==='damaged'||!scanned(b,w.time,s)||proposal.cellVersion!==w.cells[proposal.robot].version||w.stream!.cells[proposal.robot].phase!=='loading')continue;
+  if(usesBranches(s.pallet)&&b.flow?.transport?.kind==='main'){
+   if(proposal.candidates.length&&(!assigned||assigned.has(proposal.robot+':'+proposal.boxId))&&b.flow.transport.robot===undefined&&branchAvailable(w,proposal.robot,b)){b.flow.transport.robot=proposal.robot;b.owner=proposal.robot;b.flow.lastReason=`중앙 배차 R${proposal.robot+1} · 분기 대기`;w.revision++;}
+   else b.flow.lastReason=proposal.reason;
+   b.flow.checks[proposal.robot]={version:proposal.cellVersion,at:w.time,reason:proposal.reason,blocked:proposal.blocked,tested:proposal.tested};continue;
+  }
   const scheduledHold=assigned&&!assigned.has(proposal.robot+':'+proposal.boxId)&&decision.proposals.some(p=>p.robot===proposal.robot&&p.boxId===proposal.boxId&&p.candidates.length);
   if(scheduledHold){b.flow!.lastReason=proposal.reason;continue;}
   const failures:string[]=[],action=interceptAction(s,w,proposal,next.map(m=>m.action),failures);
@@ -33,6 +39,7 @@ export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],
   b.flow!.checks[proposal.robot]={version:proposal.cellVersion,at:w.time,reason,blocked:proposal.blocked,tested:proposal.tested};b.flow!.lastReason=reason;
   if(action){b.status='reserved';b.owner=proposal.robot;next.push({action,started:w.time,elapsed:0,progress:0});w.revision++;}
   else if(usesRoller(s.pallet)&&b.flow!.roller){b.flow!.roller.attempts++;}
+  else if(usesBranches(s.pallet)&&b.flow!.transport){b.flow!.transport.attempts++;}
   if(!action&&(!proposal.candidates.length||failures.some(r=>!r.includes('예약')&&!r.includes('구간')))){const cell=w.stream!.cells[proposal.robot];if(!cell.rejected.includes(b.observation.id))cell.rejected.push(b.observation.id);}
  }
  return {world:w,motions:next};
@@ -67,24 +74,31 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
    }
   }
  }
+ if(usesBranches(s.pallet)){
+  advanceBranches(w,next,s.pallet,world.time,s.constraints.gripper.speed);
+  for(const b of w.boxes){const t=b.flow?.transport;if(b.status!=='belt'||!t||t.kind!=='branch'||!branchReady(b,t.robot!)||t.attempts<2||time-(t.waitingSince??time)<BRANCH.waitSeconds)continue;
+   const state=flow.cells[t.robot!];if(state.phase==='loading'&&w.cells[t.robot!].placements.length){state.phase='checking';state.since=time;t.attempts=0;w.revision++;}
+   else if(state.phase==='loading'){b.status='outfeed';b.flow!.lastReason='서브 선두 배치 불가 · 수동 처리 대기';w.revision++;}
+  }
+ }
  const pending=w.boxes.find(b=>b.status==='pending');
  const belt=w.boxes.filter(b=>b.status==='belt'||b.status==='rejecting'||b.status==='reserved'&&next.some(m=>m.action.boxId===b.observation.id&&time<m.action.tracking!.graspAt));
  if(pending&&time>=flow.nextInfeed&&entryClear(pending,belt,time,flow.speed,s.pallet)){
-  pending.status='belt';pending.flow={enteredAt:time,measuredAt:usesRoller(s.pallet)?Infinity:time+(SCANNER_OFFSET+(s.intake?pending.observation.size.w/2:0))/flow.speed+.25,passes:0,lastReason:'이동 중 계측',checks:{}};if(usesRoller(s.pallet))pending.flow.roller={arc:0,limit:transportLength(s.pallet)-footprint(pending)/2,at:time,attempts:0};flow.entered++;w.revision++;
+  pending.status='belt';pending.flow={enteredAt:time,measuredAt:usesRoller(s.pallet)||usesBranches(s.pallet)?Infinity:time+(SCANNER_OFFSET+(s.intake?pending.observation.size.w/2:0))/flow.speed+.25,passes:0,lastReason:'이동 중 계측',checks:{}};if(usesRoller(s.pallet))pending.flow.roller={arc:0,limit:transportLength(s.pallet)-footprint(pending)/2,at:time,attempts:0};if(usesBranches(s.pallet))pending.flow.transport={kind:'main',arc:0,limit:0,at:time,attempts:0};flow.entered++;w.revision++;
   // Seeded irregular release intervals plus physical belt clearance; no overlapping spawn.
   const jitter=((s.arrival.seed*31+flow.entered*7919)%997)/997;flow.nextInfeed=time+2.6+jitter*2.6;
  }
  flow.inputClosed=!w.boxes.some(b=>b.status==='pending');
  for(const b of w.boxes){if(!b.flow)continue;
-  if(usesRoller(s.pallet)&&b.status==='belt'&&b.flow.measuredAt===Infinity&&b.flow.roller!.arc>=SCANNER_OFFSET+b.observation.size.w/2)b.flow.measuredAt=time;
+  if((usesRoller(s.pallet)||usesBranches(s.pallet))&&b.status==='belt'&&b.flow.measuredAt===Infinity&&(usesBranches(s.pallet)?b.flow.transport!.arc:b.flow.roller!.arc)>=SCANNER_OFFSET+b.observation.size.w/2)b.flow.measuredAt=time;
   if(world.time<b.flow.measuredAt&&time>=b.flow.measuredAt){
    flow.measured++;b.flow.lastReason='계측 완료 · 접근하는 작업셀에서 선별';
-   if(s.intake){b.scan=scanBox(b,b.flow.measuredAt,s);if(b.scan.verdict==='damaged'){b.observation.status='damaged';b.status='rejecting';b.flow.lastReason=`찌그러짐 ${b.scan.deviationMm.toFixed(1)} mm 검출 · 격리 이송`;}}
+   if(s.intake||usesBranches(s.pallet)){b.scan=scanBox(b,b.flow.measuredAt,s);if(b.scan.verdict==='damaged'){b.observation.status='damaged';if(!usesBranches(s.pallet))b.status='rejecting';b.flow.lastReason=`찌그러짐 ${b.scan.deviationMm.toFixed(1)} mm 검출 · 격리 이송`;}}
    w.revision++;
   }
-  if(b.status==='rejecting'&&time>=b.flow.measuredAt+REJECT_SECONDS){b.status='quarantined';b.flow.lastReason='찌그러짐 검출 · 격리 완료 · 적재 대상 제외';w.revision++;}
+  if(b.status==='rejecting'&&time>=(usesBranches(s.pallet)?b.flow.reject!.startedAt+BRANCH.rejectSeconds:b.flow.measuredAt+REJECT_SECONDS)){b.status='quarantined';b.flow.lastReason='찌그러짐 검출 · 격리 완료 · 적재 대상 제외';w.revision++;}
   if(b.status==='belt'&&s.pallet.conveyorMode==='straight'&&!usesRoller(s.pallet)&&(time-b.flow.enteredAt)*flow.speed>=loopLength(s.pallet)){b.status='outfeed';b.flow.lastReason='집기 구간 통과 · 출구 대기 · 미적재';w.revision++;}
-  if(b.status==='belt'&&s.pallet.conveyorMode!=='straight'){const laps=Math.floor((time-b.flow.enteredAt)*flow.speed/loopLength(s.pallet));if(laps>b.flow.passes){flow.passes+=laps-b.flow.passes;b.flow.passes=laps;}}
+  if(b.status==='belt'&&s.pallet.conveyorMode!=='straight'&&!usesBranches(s.pallet)){const laps=Math.floor((time-b.flow.enteredAt)*flow.speed/loopLength(s.pallet));if(laps>b.flow.passes){flow.passes+=laps-b.flow.passes;b.flow.passes=laps;}}
  }
  const allPlaced=w.boxes.every(handled);
  flow.cells.forEach((state,robot)=>{

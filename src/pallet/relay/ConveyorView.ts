@@ -1,3 +1,5 @@
+import {usesBranches} from './branchedConveyor';
+import {createBranchedConveyorView} from './BranchedConveyorView';
 import {usesRoller,ROLLER,rollerPoint} from './rollerQueue';
 import * as THREE from 'three';
 import type { Pallet } from '../types';
@@ -6,6 +8,7 @@ import {TWIN_ROBOT_PALETTE} from './twinSceneTheme';
 import {robotCount} from './fleet';
 
 export function createConveyorView(p:Pallet) {
+  if(usesBranches(p))return createBranchedConveyorView(p);
   const group=new THREE.Group();group.name='single-shared-conveyor';
   const b=beltBounds(p),left=b.left/1000,right=b.right/1000,front=CONVEYOR.front/1000,back=CONVEYOR.back/1000;
   const width=CONVEYOR.width/1000,z=CONVEYOR.deck/1000,geometry=new THREE.BoxGeometry(1,1,1);

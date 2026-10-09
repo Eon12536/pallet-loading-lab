@@ -1,3 +1,4 @@
+import {usesBranches,BRANCH} from './branchedConveyor';
 import type {Dimensions,Pallet,Vec3} from '../types';
 import type {RelayBox} from './types';
 import {beltBounds,CONVEYOR} from './conveyor';
@@ -28,7 +29,7 @@ export function rejectLayout(p:Pallet,boxes:readonly RelayBox[]):RejectLayout{
 }
 // Pallet top -290 mm, deck thickness 115 mm: sits on the factory floor at -405 mm.
 export function rejectStation(p:Pallet,index=0):Vec3{
- return {x:beltBounds(p).left+SCANNER_OFFSET+(index%3)*(p.width+350),y:Math.min(CONVEYOR.front-2200,CONVEYOR.back-2000)-Math.floor(index/3)*(p.depth+350),z:-290};
+ return {x:beltBounds(p).left+(usesBranches(p)?BRANCH.pusherOffset:SCANNER_OFFSET)+(index%3)*(p.width+350),y:Math.min(CONVEYOR.front-2200,CONVEYOR.back-2000)-Math.floor(index/3)*(p.depth+350),z:-290};
 }
 export function rejectCenter(p:Pallet,index:number,b:RejectPlacement):Vec3{
  const station=rejectStation(p,index);return {x:station.x-p.width/2+b.position.x+b.size.w/2,y:station.y-p.depth/2+b.position.y+b.size.d/2,z:station.z+b.size.h/2};

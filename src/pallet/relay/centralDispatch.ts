@@ -7,7 +7,7 @@ export function assignCentrally(offers:FlowProposal[],busy:number[]=[],maxNodes=
  const robots=[...groups.keys()].sort((a,b)=>a-b);let visited=0,capped=false,best:FlowProposal[]=[],bestValue=-Infinity;
  // Rank preserves conveyor urgency (offers are already ordered by approaching departure).
  // Quality is bounded, so raw packing-score magnitudes cannot dominate the assignment.
- const quality=(p:FlowProposal,rank:number)=>2/(1+rank)+(1+p.candidates[0].score/(1+Math.abs(p.candidates[0].score)))/2;
+ const quality=(p:FlowProposal,rank:number)=>2/(1+rank)+(1+p.candidates[0].score/(1+Math.abs(p.candidates[0].score)))/2-(p.dispatchCost??0);
  function visit(i:number,chosen:FlowProposal[],ids:Set<string>,value:number){
   if(visited>=maxNodes){capped=true;return;}visited++;
   if(chosen.length>best.length||chosen.length===best.length&&value>bestValue){best=[...chosen];bestValue=value;}
