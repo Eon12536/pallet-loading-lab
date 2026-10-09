@@ -21,7 +21,7 @@ import { createRobotArmView } from '../RobotArmView';
 import { DEFAULT_ROBOT_ARM } from '../robotArm';
 import { incomingPosition } from '../constraints';
 import { engineToRender,renderSize,centerOf } from '../coordinates';
-import { poseQuaternion,movingHeight } from '../poseRendering';
+import { poseQuaternion,movingHeight,uprightToolQuaternion } from '../poseRendering';
 import { pathPosition } from '../PalletScene';
 import { cellPose,toWorld,toLocal,park,transferMotion,cellRadius } from './layout';
 import type { Scenario,Vec3 } from '../types';
@@ -76,7 +76,7 @@ export function RelayScene(props:Props){
      if(a.tracking&&clock<a.tracking.graspAt){const b=p.world.boxes.find(b=>b.observation.id===a.boxId)!,pt=streamPosition(b,clock,p.world.stream!.speed,p.scenario.pallet);obj.position.copy(vector({...pt,z:pt.z+box.size.h/2}));obj.quaternion.identity();}
     }
    }
-   const robotState=targets.map((t,i)=>{grips[i].position.fromArray(engineToRender(t.tcp,p.scenario.pallet));grips[i].quaternion.copy(t.rotation);const state=arms[i].update(t.tcp,t.rotation,g.height,DEFAULT_ROBOT_ARM,p.scenario.pallet,p.world.cells[i].placements);return {id:i+1,kind:robotKind(p.scenario.pallet,i),active:active.has(i),tcp:t.tcp,reachable:state.pose.reachable,interference:state.hits.filter(Boolean)};});
+   const robotState=targets.map((t,i)=>{const toolRotation=robotKind(p.scenario.pallet,i)==='floor'?uprightToolQuaternion(t.rotation):t.rotation;grips[i].position.fromArray(engineToRender(t.tcp,p.scenario.pallet));grips[i].quaternion.copy(toolRotation);const state=arms[i].update(t.tcp,toolRotation,g.height,DEFAULT_ROBOT_ARM,p.scenario.pallet,p.world.cells[i].placements);return {id:i+1,kind:robotKind(p.scenario.pallet,i),active:active.has(i),tcp:t.tcp,toolNormal:new THREE.Vector3(0,1,0).applyQuaternion(toolRotation).toArray(),reachable:state.pose.reachable,interference:state.hits.filter(Boolean)};});
    if(isSingleStraight(p.scenario.pallet))renderer.domElement.dataset.boxActors=JSON.stringify({belt:[...stage.current.beltBoxes].filter(([,item])=>item.object.visible).map(([id])=>id),carried:[...movingBoxes].filter(([,obj])=>obj.visible&&moving.visible).map(([id])=>id)});renderer.domElement.dataset.robotState=JSON.stringify(robotState);renderer.domElement.dataset.phase=labels.join(' / ');renderer.domElement.dataset.activeRobots=JSON.stringify([...active]);renderer.domElement.dataset.activeCount=String(active.size);stage.current.environment?.update(camera);controls.update();renderer.render(scene,camera);renderer.domElement.dataset.drawCalls=String(renderer.info.render.calls);renderer.domElement.dataset.triangles=String(renderer.info.render.triangles);raf=requestAnimationFrame(tick);
   };tick();return()=>{cancelAnimationFrame(raf);observer.disconnect();controls.dispose();if(stage.current.environment)scene.remove(stage.current.environment.group);dispose(scene);disposeLighting();renderer.dispose();renderer.domElement.remove();stage.current=null;};
  },[]);
