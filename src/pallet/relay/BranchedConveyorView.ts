@@ -34,8 +34,11 @@ export function createBranchedConveyorView(p: Pallet) {
   lane('main-red-conveyor', (bounds.left + bounds.right) / 2000, y, (bounds.right - bounds.left) / 1000, false, main);
   for (let robot = 0; robot < robotCount(p); robot++) {
     const x = cellPose(robot, p).x / 1000;
-    lane(`sub-blue-conveyor-${robot + 1}`, x, y + (BRANCH.length + 450) / 2000, (BRANCH.length + 450) / 1000, true, sub);
-    cube(group, [.96, .08, .96], [x, deck - .04, y], sub); // powered right-angle transfer table
+    const final = robot === tailGeometry(p).robot;
+    // The final station only has the pickup deck beyond the curve's endpoint.
+    // A full straight lane here would create a second route to the same station.
+    lane(`sub-blue-conveyor-${robot + 1}`, x, final ? CONVEYOR.front / 1000 + .225 : y + (BRANCH.length + 450) / 2000, final ? .45 : (BRANCH.length + 450) / 1000, true, sub);
+    if (!final) cube(group, [.96, .08, .96], [x, deck - .04, y], sub); // powered right-angle transfer table
     cube(group, [.92, .03, .065], [x, deck + .05, CONVEYOR.front / 1000 + .45], sub);
     cube(group, [.09, .12, .08], [x + .51, deck + .08, CONVEYOR.front / 1000], steel);
   }

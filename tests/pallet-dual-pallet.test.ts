@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
+import { Box3 } from 'three';
 import { withFleet } from '../src/pallet/relay/fleet';
 import { streamInventory } from '../src/pallet/relay/streamInventory';
 import { createStream, advanceStream, applyDecision, assertStreamInventory } from '../src/pallet/relay/streamEngine';
 import { observedProblem, planStream } from '../src/pallet/relay/streamPlanner';
 import { allPallets, palletToWorld, worldToPallet } from '../src/pallet/relay/palletStations';
 import { scanBox } from '../src/pallet/relay/intake';
-import { BRANCH, branchPosition } from '../src/pallet/relay/branchedConveyor';
+import { BRANCH, branchPosition, forkArc } from '../src/pallet/relay/branchedConveyor';
+import { createBranchedConveyorView } from '../src/pallet/relay/BranchedConveyorView';
 import { tailGeometry, tailPoint, mainPoint } from '../src/pallet/relay/conveyorTail';
 import { beltBounds } from '../src/pallet/relay/conveyor';
 import type { RelayMotion } from '../src/pallet/relay/types';
@@ -64,6 +66,22 @@ describe('two independent pallets per arm',()=>{
  },120000);
 });
 describe('rounded conveyor tail',()=>{
+ it('removes the last direct fork in both rendering and assigned carton movement',()=>{
+  const s=fixture(),g=tailGeometry(s.pallet),end=beltBounds(s.pallet).right-beltBounds(s.pallet).left+g.length;
+  expect(forkArc(3,s.pallet)).toBe(end);expect(forkArc(2,s.pallet)).toBeLessThan(end-g.length);
+  const view=createBranchedConveyorView(s.pallet),last=view.group.getObjectByName('sub-blue-conveyor-4')!;
+  const bounds=new Box3().setFromObject(last);
+  expect(bounds.min.z).toBeCloseTo(-.5);expect(bounds.max.z).toBeCloseTo(-.05);
+  expect(view.group.children.filter(c=>c.name==='rounded-end-to-last-sub')).toHaveLength(1);
+  const w=ready(s),b=w.boxes[0],oldFork=g.x-beltBounds(s.pallet).left;
+  b.flow!.transport={kind:'main',robot:3,arc:oldFork-1,limit:oldFork-1,at:100,attempts:0};
+  let current=advanceStream(s,w,[],100.1).world;
+  expect(current.boxes[0].flow!.transport!.kind).toBe('main');
+  let previous=branchPosition(current.boxes[0],100.1,210,s.pallet);
+  for(let time=100.2;time<180;time+=.1){current=advanceStream(s,current,[],time).world;const next=current.boxes[0],point=branchPosition(next,time,210,s.pallet);expect(Math.hypot(point.x-previous.x,point.y-previous.y)).toBeLessThanOrEqual(21.01);previous=point;if(next.flow!.transport!.kind==='branch')break;}
+  expect(current.boxes[0].flow!.transport!.kind).toBe('branch');expect(current.boxes[0].flow!.transport!.robot).toBe(3);
+  expect(current.boxes[0].flow!.transport!.arc).toBe(BRANCH.length);
+ });
  it('has continuous position and tangents from main end to only the final sub-line head',()=>{
   const p=fixture().pallet,g=tailGeometry(p),length=beltBounds(p).right-beltBounds(p).left;
   expect(mainPoint(p,length)).toEqual(tailPoint(p,0));expect(g.robot).toBe(3);

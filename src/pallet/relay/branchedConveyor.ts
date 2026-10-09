@@ -9,7 +9,10 @@ import type { RelayBox, RelayMotion, RelayWorld } from './types';
 export const BRANCH = { length: 2000, gap: 100, capacity: 2, pusherOffset: 1500, rejectSeconds: 9, pushSeconds: 2.5, waitSeconds: 30 } as const;
 export const usesBranches = (p: Pallet) => p.conveyorMode === 'branched';
 export const mainY = CONVEYOR.back;
-export const forkArc = (robot: number, p: Pallet) => cellPose(robot, p).x - beltBounds(p).left;
+// The final robot has no direct side fork: its only inlet is the rounded main tail.
+export const forkArc = (robot: number, p: Pallet) => robot === tailGeometry(p).robot
+  ? beltBounds(p).right - beltBounds(p).left + tailGeometry(p).length
+  : cellPose(robot, p).x - beltBounds(p).left;
 export const branchReady = (b: RelayBox, robot: number) => b.flow?.transport?.kind === 'branch' && b.flow.transport.robot === robot && b.flow.transport.arc >= BRANCH.length - .01;
 export function branchAvailable(w: RelayWorld, robot: number, box: RelayBox) {
   const queued = w.boxes.filter(b => b !== box && (b.status === 'belt' || b.status === 'reserved') && b.flow?.transport?.robot === robot);
@@ -70,7 +73,7 @@ export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet
     if (b.scan?.verdict === 'damaged' && t.arc >= BRANCH.pusherOffset - .01 && !w.boxes.some(q => q.status === 'rejecting')) {
       b.status = 'rejecting'; b.flow!.reject = { startedAt: time, from: branchPosition(b, time, w.stream!.speed, p) };
       b.flow!.lastReason = '입구 스캔 불량 · 분기 전 측면 푸셔 배출'; w.revision++;
-    } else if (t.robot !== undefined && t.arc >= forkArc(t.robot, p) - .01) {
+    } else if (t.robot !== undefined && t.robot !== tailGeometry(p).robot && t.arc >= forkArc(t.robot, p) - .01) {
       const robot = t.robot;
       if (!active.some(q => q !== b && q.flow!.transport!.kind === 'branch' && q.flow!.transport!.robot === robot && q.flow!.transport!.arc < (footprint(q) + footprint(b)) / 2 + BRANCH.gap)) {
         t.kind = 'branch'; t.arc = 0; t.limit = 0; t.at = time; t.waitingSince = undefined;
