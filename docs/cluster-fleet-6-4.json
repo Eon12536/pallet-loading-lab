@@ -1,0 +1,3335 @@
+{
+  "skus": 6,
+  "robots": 4,
+  "seed": 460000000,
+  "placed": 30,
+  "outfeed": 0,
+  "peak": 3,
+  "decisions": 58,
+  "simulationSeconds": 277,
+  "computeMs": 5147.8755,
+  "counts": [
+    12,
+    8,
+    6,
+    4
+  ],
+  "world": {
+    "runId": "flow-460000000-4",
+    "revision": 180,
+    "cursor": 0,
+    "boxes": [
+      {
+        "observation": {
+          "id": "S4-01",
+          "typeId": "S4",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 40,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 0.5,
+          "measuredAt": 5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 0,
+              "at": 32.5,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 36,
+            "attempts": 0,
+            "robot": 0,
+            "waitingSince": 32.5
+          }
+        },
+        "scan": {
+          "completedAt": 5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S1-03",
+          "typeId": "S1",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          },
+          "weight": 12,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 85,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 5,
+          "measuredAt": 9.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 1,
+              "at": 42,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 45.5,
+            "attempts": 0,
+            "robot": 0,
+            "waitingSince": 39
+          }
+        },
+        "scan": {
+          "completedAt": 9.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S3-04",
+          "typeId": "S3",
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          },
+          "weight": 8,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 55,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 9.5,
+          "measuredAt": 13.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 0,
+              "at": 60.5,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 64,
+            "attempts": 0,
+            "robot": 1,
+            "waitingSince": 60.5
+          }
+        },
+        "scan": {
+          "completedAt": 13.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S4-03",
+          "typeId": "S4",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 40,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 14,
+          "measuredAt": 18.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 1,
+              "at": 70.5,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 74,
+            "attempts": 0,
+            "robot": 1,
+            "waitingSince": 67
+          }
+        },
+        "scan": {
+          "completedAt": 18.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S3-05",
+          "typeId": "S3",
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          },
+          "weight": 8,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 55,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 2,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 18,
+          "measuredAt": 22,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "2": {
+              "version": 0,
+              "at": 88.5,
+              "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 92,
+            "attempts": 0,
+            "robot": 2,
+            "waitingSince": 88.5
+          }
+        },
+        "scan": {
+          "completedAt": 22,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S3-03",
+          "typeId": "S3",
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          },
+          "weight": 8,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 55,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 2,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 22,
+          "measuredAt": 26,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "2": {
+              "version": 1,
+              "at": 98.5,
+              "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 102,
+            "attempts": 0,
+            "robot": 2,
+            "waitingSince": 94.5
+          }
+        },
+        "scan": {
+          "completedAt": 26,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S6-05",
+          "typeId": "S6",
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 30,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 3,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 26,
+          "measuredAt": 30,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "3": {
+              "version": 0,
+              "at": 112.5,
+              "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 116,
+            "attempts": 0,
+            "robot": 3,
+            "waitingSince": 112.5
+          }
+        },
+        "scan": {
+          "completedAt": 30,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S5-01",
+          "typeId": "S5",
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          },
+          "weight": 6,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 45,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 3,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 29.5,
+          "measuredAt": 33.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "3": {
+              "version": 1,
+              "at": 121.5,
+              "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 125,
+            "attempts": 0,
+            "robot": 3,
+            "waitingSince": 118.5
+          }
+        },
+        "scan": {
+          "completedAt": 33.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S4-05",
+          "typeId": "S4",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 40,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 33.5,
+          "measuredAt": 38,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 2,
+              "at": 74.5,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 78,
+            "attempts": 0,
+            "waitingSince": 74.5,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 38,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S2-02",
+          "typeId": "S2",
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          },
+          "weight": 3,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 24,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 38.5,
+          "measuredAt": 43,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 3,
+              "at": 87,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 90.5,
+            "attempts": 0,
+            "robot": 0,
+            "waitingSince": 81.5
+          }
+        },
+        "scan": {
+          "completedAt": 43,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S2-03",
+          "typeId": "S2",
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          },
+          "weight": 3,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 24,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 43.5,
+          "measuredAt": 54,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 2,
+              "at": 120,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 123.5,
+            "attempts": 0,
+            "waitingSince": 120,
+            "robot": 1
+          }
+        },
+        "scan": {
+          "completedAt": 54,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S3-02",
+          "typeId": "S3",
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          },
+          "weight": 8,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 55,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 53.5,
+          "measuredAt": 57.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 3,
+              "at": 130.5,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 134,
+            "attempts": 0,
+            "robot": 1,
+            "waitingSince": 126.5
+          }
+        },
+        "scan": {
+          "completedAt": 57.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S6-03",
+          "typeId": "S6",
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 30,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 57,
+          "measuredAt": 61,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 4,
+              "at": 120,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 123.5,
+            "attempts": 0,
+            "waitingSince": 120,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 61,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S6-04",
+          "typeId": "S6",
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 30,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 62.5,
+          "measuredAt": 82,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 5,
+              "at": 130,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 133.5,
+            "attempts": 0,
+            "robot": 0,
+            "waitingSince": 126
+          }
+        },
+        "scan": {
+          "completedAt": 82,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S5-04",
+          "typeId": "S5",
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          },
+          "weight": 6,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 45,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 2,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 81.5,
+          "measuredAt": 85.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "2": {
+              "version": 2,
+              "at": 165.5,
+              "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 169,
+            "attempts": 0,
+            "waitingSince": 165.5,
+            "robot": 2
+          }
+        },
+        "scan": {
+          "completedAt": 85.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S3-01",
+          "typeId": "S3",
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          },
+          "weight": 8,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 55,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 2,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 86.5,
+          "measuredAt": 99,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "2": {
+              "version": 3,
+              "at": 176,
+              "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 179.5,
+            "attempts": 0,
+            "robot": 2,
+            "waitingSince": 171.5
+          }
+        },
+        "scan": {
+          "completedAt": 99,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 320,
+            "d": 240,
+            "h": 320
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S5-05",
+          "typeId": "S5",
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          },
+          "weight": 6,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 45,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 3,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 98.5,
+          "measuredAt": 102.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "3": {
+              "version": 2,
+              "at": 206,
+              "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 209.5,
+            "attempts": 0,
+            "waitingSince": 206,
+            "robot": 3
+          }
+        },
+        "scan": {
+          "completedAt": 102.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S4-04",
+          "typeId": "S4",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 40,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 3,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 103.5,
+          "measuredAt": 111,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "3": {
+              "version": 3,
+              "at": 219,
+              "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 222.5,
+            "attempts": 0,
+            "robot": 3,
+            "waitingSince": 212.5
+          }
+        },
+        "scan": {
+          "completedAt": 111,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S2-05",
+          "typeId": "S2",
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          },
+          "weight": 3,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 24,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 111.5,
+          "measuredAt": 135,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 6,
+              "at": 162.5,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 166,
+            "attempts": 0,
+            "waitingSince": 162.5,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 135,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S2-04",
+          "typeId": "S2",
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          },
+          "weight": 3,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 24,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 135.5,
+          "measuredAt": 140,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 4,
+              "at": 186,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 189.5,
+            "attempts": 0,
+            "robot": 1,
+            "waitingSince": 186
+          }
+        },
+        "scan": {
+          "completedAt": 140,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S1-05",
+          "typeId": "S1",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          },
+          "weight": 12,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 85,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 140.5,
+          "measuredAt": 145,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 5,
+              "at": 197.5,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 201,
+            "attempts": 0,
+            "robot": 1,
+            "waitingSince": 193
+          }
+        },
+        "scan": {
+          "completedAt": 145,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S5-02",
+          "typeId": "S5",
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          },
+          "weight": 6,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 45,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 144.5,
+          "measuredAt": 148.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 7,
+              "at": 176.5,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 180,
+            "attempts": 0,
+            "robot": 0,
+            "waitingSince": 176.5
+          }
+        },
+        "scan": {
+          "completedAt": 148.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S6-02",
+          "typeId": "S6",
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 30,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 148.5,
+          "measuredAt": 152.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 8,
+              "at": 196,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 199.5,
+            "attempts": 0,
+            "waitingSince": 196,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 152.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S6-01",
+          "typeId": "S6",
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 30,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 152.5,
+          "measuredAt": 156.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 9,
+              "at": 210,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 213.5,
+            "attempts": 0,
+            "waitingSince": 210,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 156.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 250,
+            "d": 200,
+            "h": 200
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S1-01",
+          "typeId": "S1",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          },
+          "weight": 12,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 85,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 2,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 156.5,
+          "measuredAt": 161,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "2": {
+              "version": 4,
+              "at": 249,
+              "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 252.5,
+            "attempts": 0,
+            "robot": 2,
+            "waitingSince": 249
+          }
+        },
+        "scan": {
+          "completedAt": 161,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S2-01",
+          "typeId": "S2",
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          },
+          "weight": 3,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 24,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 2,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 161.5,
+          "measuredAt": 188.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "2": {
+              "version": 5,
+              "at": 263,
+              "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 266.5,
+            "attempts": 0,
+            "robot": 2,
+            "waitingSince": 256
+          }
+        },
+        "scan": {
+          "completedAt": 188.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 500,
+            "d": 340,
+            "h": 250
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S5-03",
+          "typeId": "S5",
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          },
+          "weight": 6,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 45,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 188.5,
+          "measuredAt": 192.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 10,
+              "at": 230.5,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 234,
+            "attempts": 0,
+            "waitingSince": 230.5,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 192.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 300,
+            "d": 250,
+            "h": 240
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S4-02",
+          "typeId": "S4",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          },
+          "weight": 4,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 40,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 192.5,
+          "measuredAt": 197,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 6,
+              "at": 253,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 256.5,
+            "attempts": 0,
+            "waitingSince": 253,
+            "robot": 1
+          }
+        },
+        "scan": {
+          "completedAt": 197,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 220
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S1-04",
+          "typeId": "S1",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          },
+          "weight": 12,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 85,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 1,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 197,
+          "measuredAt": 201.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "1": {
+              "version": 7,
+              "at": 263.5,
+              "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 267,
+            "attempts": 0,
+            "robot": 1,
+            "waitingSince": 259.5
+          }
+        },
+        "scan": {
+          "completedAt": 201.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          }
+        }
+      },
+      {
+        "observation": {
+          "id": "S1-02",
+          "typeId": "S1",
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          },
+          "weight": 12,
+          "status": "normal",
+          "orientationAllowed": [
+            0,
+            90
+          ],
+          "maxLoadKg": 85,
+          "maxLoadSource": "synthetic",
+          "handling": "upright",
+          "material": "paper",
+          "friction": 0.45
+        },
+        "owner": 0,
+        "visited": [],
+        "forwardedAt": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "status": "placed",
+        "flow": {
+          "enteredAt": 201.5,
+          "measuredAt": 212.5,
+          "passes": 0,
+          "lastReason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+          "checks": {
+            "0": {
+              "version": 11,
+              "at": 242.5,
+              "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+              "blocked": 0,
+              "tested": 1
+            }
+          },
+          "transport": {
+            "kind": "branch",
+            "arc": 2000,
+            "limit": 2000,
+            "at": 246,
+            "attempts": 0,
+            "waitingSince": 242.5,
+            "robot": 0
+          }
+        },
+        "scan": {
+          "completedAt": 212.5,
+          "deviationMm": 0,
+          "verdict": "normal",
+          "kind": null,
+          "size": {
+            "w": 400,
+            "d": 300,
+            "h": 280
+          }
+        }
+      }
+    ],
+    "cells": [
+      {
+        "queue": [],
+        "placements": [
+          {
+            "id": "S4-01",
+            "typeId": "S4",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 400,
+              "d": 300,
+              "h": 220
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 40,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S1-03",
+            "typeId": "S1",
+            "position": {
+              "x": 0,
+              "y": 300,
+              "z": 0
+            },
+            "size": {
+              "w": 400,
+              "d": 300,
+              "h": 280
+            },
+            "orientation": 0,
+            "weight": 12,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 12,
+            "maxLoadKg": 85,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S4-05",
+            "typeId": "S4",
+            "position": {
+              "x": 400,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 300,
+              "d": 400,
+              "h": 220
+            },
+            "orientation": 90,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 40,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S2-02",
+            "typeId": "S2",
+            "position": {
+              "x": 0,
+              "y": 600,
+              "z": 0
+            },
+            "size": {
+              "w": 500,
+              "d": 340,
+              "h": 250
+            },
+            "orientation": 0,
+            "weight": 3,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 24,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S6-03",
+            "typeId": "S6",
+            "position": {
+              "x": 400,
+              "y": 400,
+              "z": 0
+            },
+            "size": {
+              "w": 250,
+              "d": 200,
+              "h": 200
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 30,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S6-04",
+            "typeId": "S6",
+            "position": {
+              "x": 650,
+              "y": 400,
+              "z": 0
+            },
+            "size": {
+              "w": 250,
+              "d": 200,
+              "h": 200
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 30,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S2-05",
+            "typeId": "S2",
+            "position": {
+              "x": 500,
+              "y": 600,
+              "z": 0
+            },
+            "size": {
+              "w": 500,
+              "d": 340,
+              "h": 250
+            },
+            "orientation": 0,
+            "weight": 3,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 24,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S5-02",
+            "typeId": "S5",
+            "position": {
+              "x": 900,
+              "y": 350,
+              "z": 0
+            },
+            "size": {
+              "w": 300,
+              "d": 250,
+              "h": 240
+            },
+            "orientation": 0,
+            "weight": 6,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 6,
+            "maxLoadKg": 45,
+            "maxLoadSource": "synthetic",
+            "material": "paper",
+            "handling": "upright",
+            "friction": 0.45
+          },
+          {
+            "id": "S6-02",
+            "typeId": "S6",
+            "position": {
+              "x": 700,
+              "y": 150,
+              "z": 0
+            },
+            "size": {
+              "w": 200,
+              "d": 250,
+              "h": 200
+            },
+            "orientation": 90,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 30,
+            "maxLoadSource": "synthetic",
+            "material": "paper",
+            "handling": "upright",
+            "friction": 0.45
+          },
+          {
+            "id": "S6-01",
+            "typeId": "S6",
+            "position": {
+              "x": 900,
+              "y": 150,
+              "z": 0
+            },
+            "size": {
+              "w": 250,
+              "d": 200,
+              "h": 200
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 30,
+            "maxLoadSource": "synthetic",
+            "material": "paper",
+            "handling": "upright",
+            "friction": 0.45
+          },
+          {
+            "id": "S5-03",
+            "typeId": "S5",
+            "position": {
+              "x": 900,
+              "y": 350,
+              "z": 240
+            },
+            "size": {
+              "w": 300,
+              "d": 250,
+              "h": 240
+            },
+            "orientation": 0,
+            "weight": 6,
+            "supports": [
+              {
+                "id": "S5-02",
+                "rect": {
+                  "x": 900,
+                  "y": 350,
+                  "w": 300,
+                  "d": 250
+                },
+                "area": 75000,
+                "share": 1,
+                "forcePoint": {
+                  "x": 1050,
+                  "y": 475
+                }
+              }
+            ],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 45,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S1-02",
+            "typeId": "S1",
+            "position": {
+              "x": 0,
+              "y": 300,
+              "z": 280
+            },
+            "size": {
+              "w": 400,
+              "d": 300,
+              "h": 280
+            },
+            "orientation": 0,
+            "weight": 12,
+            "supports": [
+              {
+                "id": "S1-03",
+                "rect": {
+                  "x": 0,
+                  "y": 300,
+                  "w": 400,
+                  "d": 300
+                },
+                "area": 120000,
+                "share": 1,
+                "forcePoint": {
+                  "x": 200,
+                  "y": 450
+                }
+              }
+            ],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 85,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          }
+        ],
+        "version": 12
+      },
+      {
+        "queue": [],
+        "placements": [
+          {
+            "id": "S3-04",
+            "typeId": "S3",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 320,
+              "d": 240,
+              "h": 320
+            },
+            "orientation": 0,
+            "weight": 8,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 55,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S4-03",
+            "typeId": "S4",
+            "position": {
+              "x": 0,
+              "y": 240,
+              "z": 0
+            },
+            "size": {
+              "w": 400,
+              "d": 300,
+              "h": 220
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 40,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S2-03",
+            "typeId": "S2",
+            "position": {
+              "x": 400,
+              "y": 240,
+              "z": 0
+            },
+            "size": {
+              "w": 500,
+              "d": 340,
+              "h": 250
+            },
+            "orientation": 0,
+            "weight": 3,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 24,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S3-02",
+            "typeId": "S3",
+            "position": {
+              "x": 320,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 320,
+              "d": 240,
+              "h": 320
+            },
+            "orientation": 0,
+            "weight": 8,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 55,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S2-04",
+            "typeId": "S2",
+            "position": {
+              "x": 400,
+              "y": 580,
+              "z": 0
+            },
+            "size": {
+              "w": 500,
+              "d": 340,
+              "h": 250
+            },
+            "orientation": 0,
+            "weight": 3,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 24,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S1-05",
+            "typeId": "S1",
+            "position": {
+              "x": 900,
+              "y": 520,
+              "z": 0
+            },
+            "size": {
+              "w": 300,
+              "d": 400,
+              "h": 280
+            },
+            "orientation": 90,
+            "weight": 12,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 85,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S4-02",
+            "typeId": "S4",
+            "position": {
+              "x": 0,
+              "y": 540,
+              "z": 0
+            },
+            "size": {
+              "w": 400,
+              "d": 300,
+              "h": 220
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 40,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S1-04",
+            "typeId": "S1",
+            "position": {
+              "x": 900,
+              "y": 120,
+              "z": 0
+            },
+            "size": {
+              "w": 300,
+              "d": 400,
+              "h": 280
+            },
+            "orientation": 90,
+            "weight": 12,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 85,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          }
+        ],
+        "version": 8
+      },
+      {
+        "queue": [],
+        "placements": [
+          {
+            "id": "S3-05",
+            "typeId": "S3",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 320,
+              "d": 240,
+              "h": 320
+            },
+            "orientation": 0,
+            "weight": 8,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 55,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S3-03",
+            "typeId": "S3",
+            "position": {
+              "x": 0,
+              "y": 240,
+              "z": 0
+            },
+            "size": {
+              "w": 320,
+              "d": 240,
+              "h": 320
+            },
+            "orientation": 0,
+            "weight": 8,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 55,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S5-04",
+            "typeId": "S5",
+            "position": {
+              "x": 0,
+              "y": 480,
+              "z": 0
+            },
+            "size": {
+              "w": 300,
+              "d": 250,
+              "h": 240
+            },
+            "orientation": 0,
+            "weight": 6,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 45,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S3-01",
+            "typeId": "S3",
+            "position": {
+              "x": 320,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 240,
+              "d": 320,
+              "h": 320
+            },
+            "orientation": 90,
+            "weight": 8,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 55,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S1-01",
+            "typeId": "S1",
+            "position": {
+              "x": 320,
+              "y": 320,
+              "z": 0
+            },
+            "size": {
+              "w": 300,
+              "d": 400,
+              "h": 280
+            },
+            "orientation": 90,
+            "weight": 12,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 85,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S2-01",
+            "typeId": "S2",
+            "position": {
+              "x": 620,
+              "y": 380,
+              "z": 0
+            },
+            "size": {
+              "w": 500,
+              "d": 340,
+              "h": 250
+            },
+            "orientation": 0,
+            "weight": 3,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 24,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          }
+        ],
+        "version": 6
+      },
+      {
+        "queue": [],
+        "placements": [
+          {
+            "id": "S6-05",
+            "typeId": "S6",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "size": {
+              "w": 250,
+              "d": 200,
+              "h": 200
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 30,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S5-01",
+            "typeId": "S5",
+            "position": {
+              "x": 0,
+              "y": 200,
+              "z": 0
+            },
+            "size": {
+              "w": 250,
+              "d": 300,
+              "h": 240
+            },
+            "orientation": 90,
+            "weight": 6,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 45,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S5-05",
+            "typeId": "S5",
+            "position": {
+              "x": 250,
+              "y": 200,
+              "z": 0
+            },
+            "size": {
+              "w": 250,
+              "d": 300,
+              "h": 240
+            },
+            "orientation": 90,
+            "weight": 6,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 45,
+            "maxLoadSource": "synthetic",
+            "handling": "upright",
+            "material": "paper",
+            "friction": 0.45
+          },
+          {
+            "id": "S4-04",
+            "typeId": "S4",
+            "position": {
+              "x": 500,
+              "y": 350,
+              "z": 0
+            },
+            "size": {
+              "w": 400,
+              "d": 300,
+              "h": 220
+            },
+            "orientation": 0,
+            "weight": 4,
+            "supports": [],
+            "supportRatio": 1,
+            "loadAbove": 0,
+            "maxLoadKg": 40,
+            "maxLoadSource": "synthetic",
+            "material": "paper",
+            "handling": "upright",
+            "friction": 0.45
+          }
+        ],
+        "version": 4
+      }
+    ],
+    "pads": [
+      {
+        "boxId": null,
+        "version": 0,
+        "departedAt": 0,
+        "readyAt": 0,
+        "arrived": true
+      },
+      {
+        "boxId": null,
+        "version": 0,
+        "departedAt": 0,
+        "readyAt": 0,
+        "arrived": true
+      },
+      {
+        "boxId": null,
+        "version": 0,
+        "departedAt": 0,
+        "readyAt": 0,
+        "arrived": true
+      },
+      {
+        "boxId": null,
+        "version": 0,
+        "departedAt": 0,
+        "readyAt": 0,
+        "arrived": true
+      }
+    ],
+    "records": [
+      {
+        "step": 1,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S4-01",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "started": 32.5,
+        "finished": 41.560317569118126
+      },
+      {
+        "step": 2,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S1-03",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 300,
+          "z": 0
+        },
+        "started": 42,
+        "finished": 52.25103191675713
+      },
+      {
+        "step": 3,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S3-04",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "started": 60.5,
+        "finished": 70.46328842455902
+      },
+      {
+        "step": 4,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S4-03",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 240,
+          "z": 0
+        },
+        "started": 70.5,
+        "finished": 80.0401323895778
+      },
+      {
+        "step": 5,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S4-05",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 400,
+          "y": 0,
+          "z": 0
+        },
+        "started": 74.5,
+        "finished": 86.61721769530166
+      },
+      {
+        "step": 6,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S2-02",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 600,
+          "z": 0
+        },
+        "started": 87,
+        "finished": 97.78380519653
+      },
+      {
+        "step": 7,
+        "kind": "place",
+        "robot": 2,
+        "pallet": 0,
+        "boxId": "S3-05",
+        "from": 2,
+        "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "started": 88.5,
+        "finished": 98.46328842455902
+      },
+      {
+        "step": 8,
+        "kind": "place",
+        "robot": 2,
+        "pallet": 0,
+        "boxId": "S3-03",
+        "from": 2,
+        "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 240,
+          "z": 0
+        },
+        "started": 98.5,
+        "finished": 108.92409642766597
+      },
+      {
+        "step": 9,
+        "kind": "place",
+        "robot": 3,
+        "pallet": 0,
+        "boxId": "S6-05",
+        "from": 3,
+        "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "started": 112.5,
+        "finished": 121.26680834307899
+      },
+      {
+        "step": 10,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S6-03",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 400,
+          "y": 400,
+          "z": 0
+        },
+        "started": 120,
+        "finished": 129.872879522735
+      },
+      {
+        "step": 11,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S2-03",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 400,
+          "y": 240,
+          "z": 0
+        },
+        "started": 120,
+        "finished": 130.30845958073903
+      },
+      {
+        "step": 12,
+        "kind": "place",
+        "robot": 3,
+        "pallet": 0,
+        "boxId": "S5-01",
+        "from": 3,
+        "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 200,
+          "z": 0
+        },
+        "started": 121.5,
+        "finished": 134.11157437064898
+      },
+      {
+        "step": 13,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S6-04",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 650,
+          "y": 400,
+          "z": 0
+        },
+        "started": 130,
+        "finished": 140.2344515156319
+      },
+      {
+        "step": 14,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S3-02",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 320,
+          "y": 0,
+          "z": 0
+        },
+        "started": 130.5,
+        "finished": 140.66902016382437
+      },
+      {
+        "step": 15,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S2-05",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 500,
+          "y": 600,
+          "z": 0
+        },
+        "started": 162.5,
+        "finished": 173.78857769359317
+      },
+      {
+        "step": 16,
+        "kind": "place",
+        "robot": 2,
+        "pallet": 0,
+        "boxId": "S5-04",
+        "from": 2,
+        "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 480,
+          "z": 0
+        },
+        "started": 165.5,
+        "finished": 175.71957954638435
+      },
+      {
+        "step": 17,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S5-02",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 900,
+          "y": 350,
+          "z": 0
+        },
+        "started": 176.5,
+        "finished": 187.60208785503534
+      },
+      {
+        "step": 18,
+        "kind": "place",
+        "robot": 2,
+        "pallet": 0,
+        "boxId": "S3-01",
+        "from": 2,
+        "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 320,
+          "y": 0,
+          "z": 0
+        },
+        "started": 176,
+        "finished": 188.77396273481742
+      },
+      {
+        "step": 19,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S2-04",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 400,
+          "y": 580,
+          "z": 0
+        },
+        "started": 186,
+        "finished": 197.10106848463244
+      },
+      {
+        "step": 20,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S6-02",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 700,
+          "y": 150,
+          "z": 0
+        },
+        "started": 196,
+        "finished": 208.31590488071546
+      },
+      {
+        "step": 21,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S1-05",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 900,
+          "y": 520,
+          "z": 0
+        },
+        "started": 197.5,
+        "finished": 211.91171187951056
+      },
+      {
+        "step": 22,
+        "kind": "place",
+        "robot": 3,
+        "pallet": 0,
+        "boxId": "S5-05",
+        "from": 3,
+        "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 250,
+          "y": 200,
+          "z": 0
+        },
+        "started": 206,
+        "finished": 218.75657571930242
+      },
+      {
+        "step": 23,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S6-01",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 900,
+          "y": 150,
+          "z": 0
+        },
+        "started": 210,
+        "finished": 220.2733865259402
+      },
+      {
+        "step": 24,
+        "kind": "place",
+        "robot": 3,
+        "pallet": 0,
+        "boxId": "S4-04",
+        "from": 3,
+        "reason": "ALPS 군집 · 중앙 R4/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 500,
+          "y": 350,
+          "z": 0
+        },
+        "started": 219,
+        "finished": 229.29919696170367
+      },
+      {
+        "step": 25,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S5-03",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 900,
+          "y": 350,
+          "z": 240
+        },
+        "started": 230.5,
+        "finished": 240.8636263165738
+      },
+      {
+        "step": 26,
+        "kind": "place",
+        "robot": 0,
+        "pallet": 0,
+        "boxId": "S1-02",
+        "from": 0,
+        "reason": "ALPS 군집 · 중앙 R1/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 300,
+          "z": 280
+        },
+        "started": 242.5,
+        "finished": 251.88949345521866
+      },
+      {
+        "step": 27,
+        "kind": "place",
+        "robot": 2,
+        "pallet": 0,
+        "boxId": "S1-01",
+        "from": 2,
+        "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 320,
+          "y": 320,
+          "z": 0
+        },
+        "started": 249,
+        "finished": 262.5359785820453
+      },
+      {
+        "step": 28,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S4-02",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 0,
+          "y": 540,
+          "z": 0
+        },
+        "started": 253,
+        "finished": 263.2664709017403
+      },
+      {
+        "step": 29,
+        "kind": "place",
+        "robot": 2,
+        "pallet": 0,
+        "boxId": "S2-01",
+        "from": 2,
+        "reason": "ALPS 군집 · 중앙 R3/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 620,
+          "y": 380,
+          "z": 0
+        },
+        "started": 263,
+        "finished": 273.98387401963515
+      },
+      {
+        "step": 30,
+        "kind": "place",
+        "robot": 1,
+        "pallet": 0,
+        "boxId": "S1-04",
+        "from": 1,
+        "reason": "ALPS 군집 · 중앙 R2/P1 선택 · 바닥 → 새 공극 → 같은 SKU 접촉 → 지지·하중·경로 통과",
+        "position": {
+          "x": 900,
+          "y": 120,
+          "z": 0
+        },
+        "started": 263.5,
+        "finished": 276.83860338242766
+      }
+    ],
+    "time": 277,
+    "stream": {
+      "speed": 210,
+      "nextInfeed": 204.1286860581745,
+      "entered": 30,
+      "measured": 30,
+      "passes": 0,
+      "complete": true,
+      "inputClosed": true,
+      "cells": [
+        {
+          "phase": "loading",
+          "since": 0,
+          "cycle": 1,
+          "lastPlaced": 252,
+          "rejected": []
+        },
+        {
+          "phase": "loading",
+          "since": 0,
+          "cycle": 1,
+          "lastPlaced": 277,
+          "rejected": []
+        },
+        {
+          "phase": "loading",
+          "since": 0,
+          "cycle": 1,
+          "lastPlaced": 274,
+          "rejected": []
+        },
+        {
+          "phase": "loading",
+          "since": 0,
+          "cycle": 1,
+          "lastPlaced": 229.5,
+          "rejected": []
+        }
+      ],
+      "dispatched": []
+    }
+  }
+}

@@ -68,12 +68,13 @@ function segmentBox(u:Vec3,v:Vec3,b:Placement,radius:number,below:number,above:n
 }
 export function inspectMotion(s:Scenario,w:RelayWorld,a:RelayAction):string[]{
  const box=w.boxes.find(b=>b.observation.id===a.boxId)!.observation,g=s.constraints.gripper,reasons:string[]=[];
+ const canReach=(p:import('../types').Vec3,n:import('../types').Vec3)=>{if(!s.clusterPreset)return robotReach(s.pallet,a.robot,p,n,g.height);const r=s.constraints.reach!,e=s.constraints.workspace,d=Math.hypot(p.x-r.baseX,p.y-r.baseY);return Math.abs(n.x)<1e-6&&Math.abs(n.y)<1e-6&&n.z>1-1e-6&&d>=r.minRadius&&d<=r.maxRadius&&p.x>=e.xMin&&p.x<=e.xMax&&p.y>=e.yMin&&p.y<=e.yMax&&p.z>=0&&p.z+g.height<=e.zMax;};
  if(box.weight+g.mass>g.payload)reasons.push('전달/적재 가반하중 초과');
  if(a.pad!==undefined&&(box.size.w>800||box.size.d>CONVEYOR.width-100))reasons.push('벨트 픽업 구역 / 대기대 치수 초과');
  if(a.segments){for(const seg of a.segments){if(Math.max(seg.from.z,seg.to.z)+g.height>s.constraints.workspace.zMax)reasons.push('작업 높이 초과');
-  for(let k=0;k<=12;k++){const t=k/12,p={x:seg.from.x+(seg.to.x-seg.from.x)*t,y:seg.from.y+(seg.to.y-seg.from.y)*t,z:seg.from.z+(seg.to.z-seg.from.z)*t};if(!robotReach(s.pallet,a.robot,toLocal(p,a.robot,s.pallet),{x:0,y:0,z:1},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}}
+  for(let k=0;k<=12;k++){const t=k/12,p={x:seg.from.x+(seg.to.x-seg.from.x)*t,y:seg.from.y+(seg.to.y-seg.from.y)*t,z:seg.from.z+(seg.to.z-seg.from.z)*t};if(!canReach(toLocal(p,a.robot,s.pallet),{x:0,y:0,z:1})){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}}
  }}else if(a.path){for(let i=1;i<a.path.points.length;i++){const u=a.path.points[i-1],v=a.path.points[i];for(let k=0;k<=12;k++){const t=k/12,p={x:u.tcp.x+(v.tcp.x-u.tcp.x)*t,y:u.tcp.y+(v.tcp.y-u.tcp.y)*t,z:u.tcp.z+(v.tcp.z-u.tcp.z)*t},q=poseQuaternion(u.pose??(u.yaw===90?90:0)).slerp(poseQuaternion(v.pose??(v.yaw===90?90:0)),t),normal=new Vector3(0,1,0).applyQuaternion(q);
-   if(!robotReach(s.pallet,a.robot,palletToRobot(p,s.pallet,a.pallet),{x:normal.x,y:normal.z,z:normal.y},g.height)){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}
+   if(!canReach(palletToRobot(p,s.pallet,a.pallet),{x:normal.x,y:normal.z,z:normal.y})){reasons.push('가상 로봇 작업범위 / 자세 도달 불가');break;}
   }} }
  // Own-pallet paths are checked by inspectConstraints; additional cells/pads are obstacles here.
  const objects=allPallets(w).flatMap(({cell,robot,pallet})=>a.segments||robot!==a.robot||pallet!==(a.pallet??0)?cell.placements.map(p=>({box:p,cell:robot,pallet})):[]);
@@ -100,12 +101,13 @@ export function inspectRollerMotion(s:Scenario,w:RelayWorld,a:RelayAction):strin
  return [];
 }
 export function receiveConstraints(s:Scenario){
+ if(s.clusterPreset)return s.constraints;
  // The shared pickup lies outside the old single-cell rectangle. Pallet boundaries,
  // height, material and load constraints stay unchanged; virtual arm reach is checked.
  return {...s.constraints,workspace:{...s.constraints.workspace,xMin:-5000,xMax:5000,yMin:-5000,yMax:5000},reach:undefined,robotMode:'gripper' as const};
 }
 export function pickupConstraints(s:Scenario,w:RelayWorld,robot:number,box:Observation,pallet=0){
- const c=receiveConstraints(s);if(!usesRoller(s.pallet))return c;
+ const c=receiveConstraints(s);if(s.clusterPreset||!usesRoller(s.pallet))return c;
  const parcel=w.boxes.find(b=>b.observation.id===box.id);if(!parcel?.flow)return c;
  const pickupTop=streamPosition(parcel,w.time,w.stream!.speed,s.pallet).z+box.size.h;
  const stackTop=Math.max(0,...allPallets(w).filter(v=>v.robot===robot&&v.pallet===pallet).flatMap(v=>v.cell.placements.map(top)));

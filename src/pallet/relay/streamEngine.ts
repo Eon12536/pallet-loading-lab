@@ -37,6 +37,7 @@ export function createStream(s:Scenario):RelayWorld{
 export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],decision:FlowDecision){
  if(decision.runId!==world.runId||decision.cellVersions?.some((v,i)=>v!==allPallets(world)[i]?.cell.version))return {world,motions};
  const w=structuredClone(world),next=[...motions];
+ if(s.clusterPreset)for(const id of decision.cluster?.rejectIds??[]){const b=w.boxes.find(b=>b.observation.id===id);if(b?.status==='belt'&&!next.some(m=>m.action.boxId===id)){b.status='outfeed';b.flow!.lastReason='군집 고정 입력 · 모든 가용 팔레트 후보 불가 · 미적재 기록';w.revision++;}}
  // Keep hold reasons visible, but only centrally assigned offers may start a robot.
  const assigned=decision.commands?new Set(decision.commands.map(p=>p.robot+':'+p.boxId)):null;
  const proposals=decision.commands?[...decision.commands,...decision.proposals.filter(p=>!assigned!.has(p.robot+':'+p.boxId)).map(p=>({...p,candidates:[],reason:p.candidates.length?'중앙 배정 보류 · 다른 조합 우선 · 벨트 순환':p.reason}))]:decision.proposals;
@@ -117,7 +118,7 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
  const allPlaced=w.boxes.every(handled);
  allPallets(w).forEach(({state:current,robot,pallet,cell})=>{
   const state=current!,busy=next.some(m=>m.action.robot===robot);
-  if(state.phase==='loading'&&!busy&&departureReady(s,cell.placements)){
+  if(!s.clusterPreset&&state.phase==='loading'&&!busy&&departureReady(s,cell.placements)){
    state.phase='checking';state.since=time;w.revision++;
   }else if(state.phase==='checking'&&time-state.since>=3){state.phase='outbound';state.since=time;w.revision++;}
   else if(state.phase==='outbound'&&time-state.since>=9){
@@ -136,7 +137,7 @@ export function assertStreamInventory(w:RelayWorld,motions:RelayMotion[]){
 
 function replaceBlockedPallet(s:Scenario,w:RelayWorld,robot:number,time:number){
  const target=allPallets(w).find(p=>p.robot===robot&&p.state!.phase==='loading'&&departureReady(s,p.cell.placements));
- if(!target)return false;
+ if(s.clusterPreset||!target)return false;
  if(usesRoller(s.pallet)){
   // One blocked FIFO head is not proof that this pallet is full. Re-evaluate
   // the stopped followers on the latest placement version before exchanging.

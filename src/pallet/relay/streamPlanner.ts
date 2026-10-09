@@ -1,3 +1,4 @@
+import {planClusterStream} from '../cluster/dispatch';
 import {allPallets,palletSlots,palletCell,palletState,checkKey,robotToPallet,worldToPallet,palletToWorld} from './palletStations';
 import {usesBranches,branchReady,branchAvailable} from './branchedConveyor';
 import {usesRoller,atRollerPickup} from './rollerQueue';
@@ -18,7 +19,7 @@ import type {Candidate,PlanningInput,Scenario,PathPoint,Vec3} from '../types';
 import type {RelayWorld,RelayAction,RelayBox} from './types';
 
 export interface FlowProposal {pallet?:number;robot:number;boxId:string;cellVersion:number;candidates:Candidate[];reason:string;blocked:number;tested:number;dispatchCost?:number}
-export interface FlowDecision {runId:string;proposals:FlowProposal[];milliseconds:number;checks:number;commands?:FlowProposal[];dispatch?:DispatchSummary;cellVersions?:number[]}
+export interface FlowDecision {cluster?:{currentId?:string;rankings:{boxId:string;robot:number;rank:number[]}[];rejectIds:string[];searchBudgetMs:number;cycleBudgetMs:number};runId:string;proposals:FlowProposal[];milliseconds:number;checks:number;commands?:FlowProposal[];dispatch?:DispatchSummary;cellVersions?:number[]}
 const distance=(a:Vec3,b:Vec3)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
 const cache=new Map<string,Candidate[]>();
 const diagnostics=new Map<string,string>();
@@ -27,10 +28,10 @@ const settings={...COMPACT_SEARCH,policy:'legacy' as const,inventoryMode:'none' 
 
 // This boundary deliberately excludes the future input manifest and unmeasured boxes.
 export function observedProblem(s:Scenario,w:RelayWorld){
- const world=structuredClone(w);world.boxes=world.boxes.filter(b=>b.status==='placed'||scanned(b,w.time,s)&&b.status==='belt');
+ const world=structuredClone(w);world.boxes=world.boxes.filter(b=>b.status==='placed'||b.status==='reserved'||scanned(b,w.time,s)&&(s.clusterPreset||b.status==='belt'));
  for(const b of world.boxes)delete b.deformation;
  const ids=new Set(world.boxes.map(b=>b.observation.typeId));
- const scenario={...structuredClone(s),types:s.types.filter(t=>ids.has(t.id)),events:[]};
+ const scenario={...structuredClone(s),types:s.clusterPreset?s.types:s.types.filter(t=>ids.has(t.id)),events:[]};
  if(scenario.practical)scenario.practical.profile.baseTypes=Object.fromEntries(Object.entries(scenario.practical.profile.baseTypes).filter(([id])=>ids.has(id)));
  return {scenario,world};
 }
@@ -51,6 +52,7 @@ function sites(ctx:PlanningInput,key?:string){
  }return candidates;
 }
 export function planStream(s:Scenario,w:RelayWorld,busy:number[]=[],central=true):FlowDecision{
+ if(s.clusterPreset)return planClusterStream(s,w,busy);
  const start=performance.now(),proposals:FlowProposal[]=[];let checks=0;
  const known=w.boxes.filter(b=>b.status==='belt'&&b.observation.status!=='damaged'&&scanned(b,w.time,s));
  for(let robot=0;robot<w.cells.length;robot++){
