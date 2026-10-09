@@ -1,9 +1,10 @@
 import { describe,it,expect } from 'vitest';
-import { runAlpsTrial,defaultAlpsConfig,categoryMap,shortlistAlps,pairedRoutingEffect } from '../src/pallet/alps/experiment';
+import { runAlpsTrial,defaultAlpsConfig,categoryMap,shortlistAlps,pairedRoutingEffect,removalState } from '../src/pallet/alps/experiment';
 import { candidateSet } from '../src/pallet/candidates';
 import { inspectConstraints } from '../src/pallet/constraints';
 import { distribution } from '../src/pallet/benchmark/statistics';
 import type { AlgorithmEntry } from '../src/pallet/benchmark/model';
+import type { Observation,Placement } from '../src/pallet/types';
 
 function fixture(){const c=defaultAlpsConfig();c.scenario.types=[{id:'A',name:'A',size:{w:400,d:400,h:200},weight:3,quantity:8,color:'#6abbaa',orientations:[0],maxLoadKg:100}];c.scenario.pallet={width:400,depth:400,maxHeight:800};c.scenario.constraints.stability={maxSlenderness:10,minMarginRatio:0,lateralAccelerationG:0,loadSafetyFactor:1};c.scenario.constraints.horizontalGap=0;c.settings.maxCandidates=8;c.trialMs=30000;return c;}
 describe('ALPS same-capacity causal experiment',()=>{
@@ -52,5 +53,17 @@ describe('ALPS same-capacity causal experiment',()=>{
   const c=fixture();expect(c.scenario.constraints.robotMode).toBe('ideal');
   expect(()=>runAlpsTrial(c,'offline-stock','pooled',42,'discovery')).toThrow(/오프라인/);
   const r=runAlpsTrial({...c,trialMs:-1},'blb','dedicated',42,'discovery');expect(r.status).toBe('timeout');expect(shortlistAlps([r])).toEqual([]);
+ });
+ it('rejects removing a counterweight even when its vertical pickup path is free',()=>{
+  // This static resultant fixture permits tall shapes; the independent field standing rule
+  // is not part of its declared environment. Production/default settings remain unchanged.
+  const c=fixture();c.scenario.pallet={width:600,depth:400,maxHeight:2000};c.scenario.constraints.stability!.lateralAccelerationG=.15;c.scenario.constraints.standingHeight={enabled:false,maxRiseMm:240};
+  let stack:Placement[]=[];
+  for(const [id,size,weight,position] of [['base',{w:600,d:400,h:200},1,{x:0,y:0,z:0}],['counterweight',{w:100,d:400,h:100},60,{x:0,y:0,z:200}],['tall',{w:250,d:400,h:1500},60,{x:350,y:0,z:200}]] as const){
+   const o:Observation={id,typeId:id,size,weight,status:'normal',orientationAllowed:[0],maxLoadKg:1000};
+   const p:Placement={...o,position,orientation:0,supports:[],supportRatio:0,loadAbove:0};const checked=inspectConstraints(p,o,stack,c.scenario.pallet,c.scenario.constraints);expect(checked.reasons).toEqual([]);stack=checked.stack;
+  }
+  expect(removalState(stack,'counterweight',c.scenario.constraints).valid).toBe(false);
+  expect(removalState(stack,'tall',c.scenario.constraints).valid).toBe(true);
  });
 });

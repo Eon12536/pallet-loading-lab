@@ -1,6 +1,8 @@
 import { ArrivalEnvironment } from '../environment';
 import { inspectConstraints } from '../constraints';
-import { withLoads, volume, top } from '../geometry';
+import { contactsFor, centerSupported, volume, top } from '../geometry';
+import { equilibrium } from '../equilibrium';
+import { materialInfo } from '../materials';
 import { stability } from '../stability';
 import { auditProposal } from '../benchmark/runner';
 import { getAlgorithm } from '../benchmark/registry';
@@ -8,8 +10,8 @@ import { distribution, fingerprint } from '../benchmark/statistics';
 import { rng, shuffled } from '../scenarios';
 import { strategyDemo } from '../strategies/demo';
 import { DEFAULT_STRATEGY } from '../strategies/PackingStrategy';
-import { ONLINE_SEARCH } from '../types';
-import type { Analysis, Observation, Placement, PlanningInput, Scenario, SearchSettings } from '../types';
+import { ONLINE_SEARCH,DEFAULT_STABILITY } from '../types';
+import type { Analysis, Constraints, Observation, Placement, PlanningInput, Scenario, SearchSettings } from '../types';
 import type { AlgorithmEntry } from '../benchmark/model';
 
 export type Group='apparel'|'other';
@@ -32,6 +34,12 @@ export function categoryMap(s:Scenario,seed:number,share:number):Record<string,G
 }
 type Cell={placements:Placement[];state?:PlanningInput['strategyState']};
 type Choice={index:number;analysis:Analysis;input:PlanningInput;placement:Placement};
+/** Counterbalancing upper loads can make removing an otherwise accessible box unsafe. */
+export function removalState(stack:Placement[],id:string,c:Constraints){
+ const rest=stack.filter(p=>p.id!==id),recontacted=rest.map(p=>{const supports=contactsFor(p,rest.filter(b=>b.id!==p.id),c.contactTolerance);return {...p,supports,supportRatio:p.position.z===0?1:supports.reduce((sum,s)=>sum+s.area,0)/(p.size.w*p.size.d)};}),solved=equilibrium(recontacted),cfg=c.stability??DEFAULT_STABILITY,reasons=stability(solved.placements,cfg,solved).violations;
+ for(const p of solved.placements){if(p.supportRatio<(p.packaging?.minSupportRatio??c.supportRatio)-1e-6||!centerSupported(p,p.supports))reasons.push(`인출 후 지지 부족 · ${p.id}`);const capacity=materialInfo(p,cfg).capacity;if(capacity!==null&&p.loadAbove>capacity+1e-6)reasons.push(`인출 후 하중 초과 · ${p.id}`);}
+ return {valid:reasons.length===0,reasons,placements:solved.placements};
+}
 export function runAlpsTrial(config:AlpsConfig,algorithm:string,route:Routing,seed:number,split:AlpsTrial['split'],definition:AlgorithmEntry=getAlgorithm(algorithm)):AlpsTrial {
  if(definition.scope!=='online')throw Error('ALPS 온라인 비교에는 오프라인 기준해를 포함하지 않습니다.');
  if(!Number.isFinite(config.apparelShare)||config.apparelShare<0||config.apparelShare>1||!Number.isInteger(config.bufferCapacity)||config.bufferCapacity<0)throw Error('분류 비율 또는 버퍼 용량 오류');
@@ -85,21 +93,21 @@ export function runAlpsTrial(config:AlpsConfig,algorithm:string,route:Routing,se
    const priority:Group=config.shipment==='priority'&&[...pending].some(id=>groups[id]==='apparel')?'apparel':'other';
    const eligible=(id:string)=>config.shipment==='simultaneous'||groups[id]===priority;
    const fromHeld=held.find(o=>eligible(o.id)&&!attempted.has(o.id));
-   const physical=cells.flatMap(c=>c.placements.filter(p=>eligible(p.id)&&!attempted.has(p.id)&&accessible(p,c.placements))).sort((a,b)=>top(b)-top(a)||a.id.localeCompare(b.id))[0];
+   const physical=cells.flatMap(cell=>cell.placements.filter(p=>eligible(p.id)&&!attempted.has(p.id)&&accessible(p,cell.placements)&&removalState(cell.placements,p.id,s.constraints).valid)).sort((a,b)=>top(b)-top(a)||a.id.localeCompare(b.id))[0];
    const o=fromHeld??(physical?observations.get(physical.id):undefined);
    if(o){
     const counts=Object.fromEntries(s.types.map(t=>[t.id,[...pending].filter(id=>id!==o.id&&observations.get(id)?.typeId===t.id).length]));
     const clean={...o,pickupPosition:undefined},target=groups[o.id]==='apparel'?0:1,choice=choose(clean,dest,[target],step++,counts);
     if(!choice||!commit(choice,dest)){if(row.status!=='finished')break;attempted.add(o.id);snapshot('redistribution',o,'목적지 후보 없음 · 다른 박스 검토',target,'같은 상태에서는 반복하지 않으며 목적지 지지 상태 변경 후만 재검토');continue;}
-    if(fromHeld)held.splice(held.indexOf(fromHeld),1);else {const index=sourceCell(o.id);cells[index].placements=withLoads(cells[index].placements.filter(p=>p.id!==o.id));}
+    if(fromHeld)held.splice(held.indexOf(fromHeld),1);else {const index=sourceCell(o.id);cells[index].placements=removalState(cells[index].placements,o.id,s.constraints).placements;}
     pending.delete(o.id);attempted.clear();row.redistributed++;row.moves++;snapshot('redistribution',o,`출고 P${target+1} 재적재`,target,fromHeld?'임시 버퍼에서 회수':'상부 차단 없음 · 수직 인출 근사');continue;
    }
    // Remove only a top-accessible blocker on an actual ancestor chain of requested goods.
    const blockers=new Set<string>();
    for(const cell of cells){const walk=(p:Placement,seen:Set<string>)=>{for(const b of cell.placements){if(b.id===p.id||seen.has(b.id)||b.position.z<top(p)-s.constraints.contactTolerance)continue;if(b.position.x>=p.position.x+p.size.w+s.constraints.gripper.margin||b.position.x+b.size.w<=p.position.x-s.constraints.gripper.margin||b.position.y>=p.position.y+p.size.d+s.constraints.gripper.margin||b.position.y+b.size.d<=p.position.y-s.constraints.gripper.margin)continue;seen.add(b.id);blockers.add(b.id);walk(b,seen);}};for(const p of cell.placements.filter(p=>eligible(p.id)))walk(p,new Set());}
-   const blocker=cells.flatMap(c=>c.placements.filter(p=>blockers.has(p.id)&&accessible(p,c.placements))).sort((a,b)=>top(b)-top(a)||a.id.localeCompare(b.id))[0];
+   const blocker=cells.flatMap(cell=>cell.placements.filter(p=>blockers.has(p.id)&&accessible(p,cell.placements)&&removalState(cell.placements,p.id,s.constraints).valid)).sort((a,b)=>top(b)-top(a)||a.id.localeCompare(b.id))[0];
    if(!blocker||held.length>=config.bufferCapacity){fail(!blocker?(attempted.size?'재분배 대상 팔레트 배치 불가':'수직 인출 경로 없음'):'임시 버퍼 용량 부족');row.reason='재분배 중단 · 현재 상태의 다른 접근 가능 박스도 검토함 · 무한 재시도 없음';break;}
-   const box=observations.get(blocker.id)!,index=sourceCell(box.id);cells[index].placements=withLoads(cells[index].placements.filter(p=>p.id!==box.id));held.push(box);row.moves++;row.rehandles++;row.bufferPeak=Math.max(row.bufferPeak,held.length);snapshot('redistribution',box,'차단 박스 임시 이동',null,'우선 출고 대상의 수직 인출 경로를 확보');
+   const box=observations.get(blocker.id)!,index=sourceCell(box.id);cells[index].placements=removalState(cells[index].placements,box.id,s.constraints).placements;held.push(box);row.moves++;row.rehandles++;row.bufferPeak=Math.max(row.bufferPeak,held.length);snapshot('redistribution',box,'차단 박스 임시 이동',null,'우선 출고 대상의 수직 인출 경로 확보 · 인출 후 원본 지지/하중 재검사');
   }
  }catch(error){row.status='error';row.reason=(error as Error).message;}
  const lastInbound=[...row.trace].reverse().find(t=>t.phase==='inbound'),packed=lastInbound?.source.flat()??[];
