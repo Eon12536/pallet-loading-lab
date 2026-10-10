@@ -7,6 +7,28 @@ import {planStream,observedProblem} from '../src/pallet/relay/streamPlanner';
 import type {RelayMotion} from '../src/pallet/relay/types';
 import {pusherBoxPosition} from '../src/pallet/relay/branchedConveyor';
 import {rejectStation} from '../src/pallet/relay/rejectPallet';
+import {rejectLayout} from '../src/pallet/relay/rejectPallet';
+
+it('reproducibly mixes defects with normal cargo and quarantines them without changing the planner or frozen preset',()=>{
+ const s=clusterFleetDemo(0,4,5,.25),base=clusterScenario();
+ expect(base.intake!.damageRate).toBe(0);expect(s.constraints).toEqual(base.constraints);
+ let w=createStream(s),motions:RelayMotion[]=[];
+ const damaged=w.boxes.filter(b=>b.deformation).map(b=>b.observation.id);
+ expect(damaged.length).toBeGreaterThan(0);expect(damaged.length).toBeLessThan(30);
+ expect(createStream(s).boxes.filter(b=>b.deformation).map(b=>b.observation.id)).toEqual(damaged);
+ for(let tick=1;tick<=1600&&!w.stream!.complete;tick++){
+  ({world:w,motions}=advanceStream(s,w,motions,tick/2));
+  if(tick%4===0){const o=observedProblem(s,w),d=planStream(o.scenario,o.world,motions.map(m=>m.action.robot));({world:w,motions}=applyDecision(s,w,motions,d));}
+  for(const b of w.boxes.filter(b=>b.scan?.verdict==='damaged')){expect(b.flow?.transport?.kind).not.toBe('branch');expect(['belt','rejecting','quarantined']).toContain(b.status);expect(motions.some(m=>m.action.boxId===b.observation.id)).toBe(false);}
+  expect(assertStreamInventory(w,motions)).toBe(true);
+ }
+ const quarantined=w.boxes.filter(b=>b.status==='quarantined'),placed=w.cells.flatMap(c=>c.placements);
+ expect(w.stream!.complete).toBe(true);expect(quarantined.map(b=>b.observation.id).sort()).toEqual([...damaged].sort());
+ expect(placed.length).toBe(30-damaged.length);expect(placed.every(b=>!damaged.includes(b.boxId))).toBe(true);
+ expect(rejectLayout(s.pallet,quarantined).pallets.flatMap(p=>p.placements)).toHaveLength(damaged.length);
+ console.log('mixed defect cluster',{placed:placed.length,quarantined:quarantined.length,pallets:w.cells.map(c=>c.placements.length)});
+ expect(()=>clusterFleetDemo(0,4,5,1.01)).toThrow();
+},180000);
 
 it('shares smooth arc-length paths with separated four-lane conveyor surfaces',()=>{
  const p=clusterFleetDemo().pallet,routes=Array.from({length:4},(_,i)=>hubRoute(p,i));

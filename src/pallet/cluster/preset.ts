@@ -1,5 +1,6 @@
 import {ONLINE_SEARCH} from '../types';
 import type {Scenario,BoxType,SearchSettings} from '../types';
+import {intakeSettings} from '../relay/intake';
 export const CLUSTER_GUIDE_SIGNATURE='8bab669522ba33fdce1f082fe36fc5b8ff2f7f4b4e4dc100bba05912e2928feb';
 export const CLUSTER_SETTINGS:SearchSettings={...ONLINE_SEARCH,temporaryBuffer:false,plannerSeed:91473,maxCandidates:48,topK:4,samples:2,depth:2,reserveProbes:4,virtualCandidates:8,portfolio:false,inventoryMode:'none'};
 const specs=[['생수',400,300,280,12,85],['과자',500,340,250,3,24],['세제',320,240,320,8,55],['생활용품',400,300,220,4,40],['헤어케어',300,250,240,6,45],['스킨케어',250,200,200,4,30],['음료',380,260,230,7,50],['주방용품',450,300,210,5,40]] as const;
@@ -12,12 +13,13 @@ export function clusterScenario(skus:6|8=6,order=0,robots=4):Scenario{
   arrival:{seed:(skus===6?460000000:460100000)+order,pattern:'random-draw'},events:[],supplyMode:'arrival',intake:{damageRate:0,thresholdMm:8}};
 }
 // Supply extension for the dedicated demonstration, never the 30-box reproduction.
-export function clusterFleetDemo(order=0,robots=4,quantityPerSku=robots*10):Scenario{
+export function clusterFleetDemo(order=0,robots=4,quantityPerSku=robots*10,damageRate=0):Scenario{
  if(!Number.isInteger(quantityPerSku)||quantityPerSku<5||quantityPerSku>80)throw Error('시연 공급량은 SKU당 5–80개 정수입니다.');
  const s=clusterScenario(6,order,robots);
  s.id='alps-cluster-fleet-demo';s.name=`ALPS 군집 다중 로봇 · 6 SKU / ${quantityPerSku*6}개 공급`;
  s.types.forEach(t=>t.quantity=quantityPerSku);
  s.clusterPreset!.demonstration={quantityPerSku};
+ s.intake=intakeSettings(damageRate);
  if(robots>1)s.pallet.conveyorDistribution='hub';
  return s;
 }
