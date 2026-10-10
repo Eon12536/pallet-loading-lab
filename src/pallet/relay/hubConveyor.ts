@@ -7,10 +7,27 @@ import type {RelayWorld,RelayMotion,RelayBox} from './types';
 export const usesHub=(p:Pallet)=>p.conveyorDistribution==='hub';
 export const HUB={x:0,y:-3200,inletY:-6200,length:3000} as const;
 export const hubMainPoint=(arc:number):Vec3=>({x:0,y:HUB.inletY+Math.min(HUB.length,arc),z:CONVEYOR.deck});
-export function hubRoute(p:Pallet,robot:number){return [hubMainPoint(HUB.length),{x:cellPose(robot,p).x,y:-1100,z:CONVEYOR.deck},{x:cellPose(robot,p).x,y:CONVEYOR.front,z:CONVEYOR.deck}];}
-export function hubLength(p:Pallet,robot:number){const [a,b,c]=hubRoute(p,robot);return Math.hypot(b.x-a.x,b.y-a.y)+Math.hypot(c.x-b.x,c.y-b.y);}
-// The existing branch queue uses 0..2000 logical coordinates; movement uses actual path length.
-export function hubBranchPoint(p:Pallet,robot:number,arc:number):Vec3{const [a,b,c]=hubRoute(p,robot),first=Math.hypot(b.x-a.x,b.y-a.y),d=Math.max(0,Math.min(2000,arc))/2000*hubLength(p,robot);const from=d<=first?a:b,to=d<=first?b:c,u=d<=first?d/first:(d-first)/(hubLength(p,robot)-first);return {x:from.x+(to.x-from.x)*u,y:from.y+(to.y-from.y)*u,z:CONVEYOR.deck};}
+export const HUB_DECK_RADIUS=1750;
+type Curve={points:Vec3[];distances:number[];length:number};
+const curves=new Map<string,Curve>();
+function curve(p:Pallet,robot:number):Curve{
+ const count=p.robotLayout?.count??4,end=cellPose(robot,p),key=[count,p.width,p.depth,p.palletsPerRobot,p.clusterLayout,robot,end.x].join(':');
+ const saved=curves.get(key);if(saved)return saved;
+ const angle=(-70+140*robot/Math.max(1,count-1))*Math.PI/180;
+ // Quartic Bezier: vertical entry and vertical pickup tangent, with a broad fan between.
+ const control=[hubMainPoint(HUB.length),{x:0,y:HUB.y+600,z:CONVEYOR.deck},{x:Math.sin(angle)*2600,y:HUB.y+Math.cos(angle)*2600,z:CONVEYOR.deck},{x:end.x,y:CONVEYOR.front-1400,z:CONVEYOR.deck},{x:end.x,y:CONVEYOR.front,z:CONVEYOR.deck}];
+ const points:Vec3[]=[],distances:number[]=[];let length=0;
+ for(let i=0;i<=256;i++){const t=i/256,u=1-t,k=[u**4,4*u**3*t,6*u*u*t*t,4*u*t**3,t**4],pt={x:0,y:0,z:CONVEYOR.deck};for(let j=0;j<5;j++){pt.x+=control[j].x*k[j];pt.y+=control[j].y*k[j];}if(i)length+=Math.hypot(pt.x-points[i-1].x,pt.y-points[i-1].y);points.push(pt);distances.push(length);}
+ const result={points,distances,length};if(curves.size>=64)curves.clear();curves.set(key,result);return result;
+}
+export function hubRoute(p:Pallet,robot:number){return curve(p,robot).points;}
+export function hubLength(p:Pallet,robot:number){return curve(p,robot).length;}
+// Arc-length lookup keeps physical velocity independent of Bezier parameter and lane length.
+export function hubBranchPoint(p:Pallet,robot:number,arc:number):Vec3{
+ const c=curve(p,robot),distance=Math.max(0,Math.min(2000,arc))/2000*c.length;let lo=0,hi=c.distances.length-1;
+ while(lo+1<hi){const mid=(lo+hi)>>1;if(c.distances[mid]<=distance)lo=mid;else hi=mid;}
+ const a=c.points[lo],b=c.points[hi],u=(distance-c.distances[lo])/(c.distances[hi]-c.distances[lo]);return {x:a.x+(b.x-a.x)*u,y:a.y+(b.y-a.y)*u,z:CONVEYOR.deck};
+}
 const radius=(b:RelayBox)=>Math.hypot(b.observation.size.w,b.observation.size.d)/2;
 const position=(b:RelayBox,p:Pallet)=>{const t=b.flow!.transport!;return t.kind==='main'?hubMainPoint(t.arc):hubBranchPoint(p,t.robot!,t.arc);};
 export function advanceHub(w:RelayWorld,motions:RelayMotion[],p:Pallet,previousTime:number,liftSpeed:number){
