@@ -1,3 +1,4 @@
+import {usesHub,HUB,hubMainPoint,hubBranchPoint,hubLength,advanceHub} from './hubConveyor';
 import {mainPoint,tailGeometry} from './conveyorTail';
 import { beltBounds, CONVEYOR } from './conveyor';
 import { cellPose } from './layout';
@@ -10,19 +11,21 @@ export const BRANCH = { length: 2000, gap: 100, capacity: 2, pusherOffset: 1500,
 export const usesBranches = (p: Pallet) => p.conveyorMode === 'branched';
 export const mainY = CONVEYOR.back;
 // The final robot has no direct side fork: its only inlet is the rounded main tail.
-export const forkArc = (robot: number, p: Pallet) => robot === tailGeometry(p).robot
+export const forkArc = (robot: number, p: Pallet) => usesHub(p) ? HUB.length : robot === tailGeometry(p).robot
   ? tailGeometry(p).right - beltBounds(p).left + tailGeometry(p).length
   : cellPose(robot, p).x - beltBounds(p).left;
 export const branchReady = (b: RelayBox, robot: number) => b.flow?.transport?.kind === 'branch' && b.flow.transport.robot === robot && b.flow.transport.arc >= BRANCH.length - .01;
-export function branchAvailable(w: RelayWorld, robot: number, box: RelayBox) {
+export function branchAvailable(w: RelayWorld, robot: number, box: RelayBox, p?:Pallet) {
   const queued = w.boxes.filter(b => b !== box && (b.status === 'belt' || b.status === 'reserved') && b.flow?.transport?.robot === robot);
-  return box.observation.size.w <= CONVEYOR.width - 40 && box.observation.size.d <= CONVEYOR.width - 40 && queued.length < BRANCH.capacity && queued.reduce((n, b) => n + footprint(b) + BRANCH.gap, footprint(box)) <= BRANCH.length;
+  return box.observation.size.w <= CONVEYOR.width - 40 && box.observation.size.d <= CONVEYOR.width - 40 && queued.length < (p&&usesHub(p)?4:BRANCH.capacity) && queued.reduce((n, b) => n + footprint(b) + BRANCH.gap, footprint(box)) <= (p&&usesHub(p)?hubLength(p,robot):BRANCH.length);
 }
 export function branchPosition(b: RelayBox, time: number, speed: number, p: Pallet): Vec3 {
   const t = b.flow!.transport!, arc = Math.min(t.limit, t.arc + Math.max(0, time - t.at) * speed);
+  if(usesHub(p))return t.kind==='main'?hubMainPoint(arc):hubBranchPoint(p,t.robot!,arc);
   return t.kind === 'main' ? mainPoint(p, arc) : { x: cellPose(t.robot!, p).x, y: mainY + arc, z: CONVEYOR.deck };
 }
-export function pusherBoxPosition(from: Vec3, target: Vec3, elapsed: number): Vec3 {
+export function pusherBoxPosition(from: Vec3, target: Vec3, elapsed: number, p?:Pallet): Vec3 {
+  if(p&&usesHub(p)){const t=Math.max(0,Math.min(9,elapsed)),u=Math.min(1,t/2.5),v=Math.max(0,(t-2.5)/6.5);return {x:from.x-1050*u+(target.x-from.x+1050)*v,y:from.y+(target.y-from.y)*v,z:from.z+(target.z-from.z)*v};}
   // Kinematic side stroke then gravity reject rollers; not a contact-force model.
   const t = Math.max(0, Math.min(BRANCH.rejectSeconds, elapsed));
   if (t <= BRANCH.pushSeconds) return { ...from, y: from.y - 1050 * t / BRANCH.pushSeconds };
@@ -33,6 +36,7 @@ const occupied = (b: RelayBox, motions: RelayMotion[], time: number, liftSpeed: 
 
 /** Physical queues run independently of the central feasibility worker. No future inventory. */
 export function advanceBranches(w: RelayWorld, motions: RelayMotion[], p: Pallet, previousTime: number, liftSpeed: number) {
+  if(usesHub(p)){advanceHub(w,motions,p,previousTime,liftSpeed);return;}
   const time = w.time, travel = (time - previousTime) * w.stream!.speed;
   const active = w.boxes.filter(b => b.flow?.transport && occupied(b, motions, time, liftSpeed));
   for (let robot = 0; robot < w.cells.length; robot++) {

@@ -1,3 +1,4 @@
+import {usesHub} from '../relay/hubConveyor';
 import {CLUSTER_SETTINGS} from './preset';
 import {searchCluster,clusterRank} from './packing';
 import {compareDenseRank} from './geometry';
@@ -27,13 +28,15 @@ export function planClusterStream(s:Scenario,w:RelayWorld,busy:number[]=[],publi
  const ready=known.filter(b=>usesBranches(s.pallet)?branchReady(b,b.flow!.transport?.robot??-1):atRollerPickup(b,s.pallet));
  // Already routed parcels are transport reservations, not a reorderable planning buffer.
  const current=known.find(b=>usesBranches(s.pallet)?b.flow?.transport?.kind==='main'&&b.flow.transport.robot===undefined:atRollerPickup(b,s.pallet));
- const tasks=[...(usesBranches(s.pallet)?ready:ready.slice(0,1)).filter(b=>!busy.includes(b.flow?.transport?.robot??0)),...(current&&!ready.includes(current)?[current]:[])];
+ const incoming=usesHub(s.pallet)?known.filter(b=>b.flow?.transport?.kind==='main'&&b.flow.transport.robot===undefined).slice(0,w.cells.length):current?[current]:[];
+ const tasks=[...(usesBranches(s.pallet)?ready:ready.slice(0,1)).filter(b=>!busy.includes(b.flow?.transport?.robot??0)),...incoming.filter(b=>!ready.includes(b))];
  const rejectIds:string[]=[],ranks:{boxId:string;robot:number;rank:number[]}[]=[];
  const decision=():FlowDecision=>({runId:w.runId,proposals:[...offers],commands:[...offers],cellVersions:w.cells.map(c=>c.version),milliseconds:performance.now()-started,checks,dispatch:{mode:'central',offered:tested.size,commands:offers.length,visited:checks,capped:performance.now()>=deadline,assignments:offers.map(p=>({robot:p.robot,pallet:0,boxId:p.boxId,cellVersion:p.cellVersion}))},cluster:{currentId:current?.observation.id,rankings:[...ranks],rejectIds:[...rejectIds],searchBudgetMs:9000,cycleBudgetMs:10000}});
  for(const b of tasks){
   let best:FlowProposal|undefined,bestRank:number[]|undefined;
   const routed=b.flow?.transport?.kind==='branch';
-  const eligible=w.cells.map((_,i)=>i).filter(i=>!busy.includes(i)&&!offers.some(o=>o.robot===i)&&(!routed||b.flow!.transport!.robot===i)&&(!usesBranches(s.pallet)||routed||branchAvailable(w,i,b)&&inPickWindow(b,w.time,w.stream!.speed,s.pallet,i)));
+  const eligible=w.cells.map((_,i)=>i).filter(i=>(!routed&&usesHub(s.pallet)||!busy.includes(i))&&!offers.some(o=>o.robot===i)&&(!routed||b.flow!.transport!.robot===i)&&(!usesBranches(s.pallet)||routed||branchAvailable(w,i,b,s.pallet)&&inPickWindow(b,w.time,w.stream!.speed,s.pallet,i)));
+  if(usesHub(s.pallet)&&!routed)eligible.sort((a,b)=>w.boxes.filter(q=>q.status!=='placed'&&q.status!=='outfeed'&&q.flow?.transport?.robot===a).length-w.boxes.filter(q=>q.status!=='placed'&&q.status!=='outfeed'&&q.flow?.transport?.robot===b).length||a-b);
   for(const robot of eligible){
    if(performance.now()>=deadline)break;tested.add(robot);const input=clusterInput(s,w,robot,b);
    const allow=(c:Candidate)=>!inspectMotion(s,w,{runId:w.runId,revision:w.revision,cellVersion:w.cells[robot].version,robot,pallet:0,kind:'place',boxId:b.observation.id,from:robot,reason:'',candidate:c,path:c.path,seconds:c.path.seconds,initialCenter:{x:0,y:0,z:0}}).length;
@@ -42,7 +45,7 @@ export function planClusterStream(s:Scenario,w:RelayWorld,busy:number[]=[],publi
    const result=searchCluster({input,algorithm:'cluster-layer'},base,deadline,update,allow);checks+=result.diagnostics.fullConstraintChecks;
    if(result.candidate){ranks.push({boxId:b.observation.id,robot,rank:clusterRank(result.candidate.placement,input,'cluster-layer')});update(result.candidate);}
    // Publish only a whole valid decision; late messages are discarded by the supervisor.
-   if(best){const previous=offers.length;offers.push(best);publish?.(decision());offers.length=previous;}
+   if(best){const previous=offers.length;offers.push(best);publish?.(decision());offers.length=previous;if(usesHub(s.pallet)&&!routed)break;}
   }
   if(best)offers.push(best);
   else if(eligible.length&&!busy.length&&offers.length===0&&performance.now()<deadline)rejectIds.push(b.observation.id);

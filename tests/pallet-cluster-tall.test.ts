@@ -10,7 +10,7 @@ it('extends supply only; preserves the 30-box reproduction and fixed safety cons
  expect(base.types.reduce((n,t)=>n+t.quantity,0)).toBe(30);
  expect(demo.types.reduce((n,t)=>n+t.quantity,0)).toBe(240);
  expect(demo.types.map(t=>({...t,quantity:5}))).toEqual(base.types);
- expect(demo.constraints).toEqual(base.constraints);expect(demo.pallet).toEqual(base.pallet);
+ expect(demo.constraints).toEqual(base.constraints);expect({...demo.pallet,conveyorDistribution:undefined}).toEqual({...base.pallet,conveyorDistribution:undefined});
  expect(()=>clusterFleetDemo(0,4,81)).toThrow();
 });
 it('runs four robots with 6 SKU and enough supply for tall stacks, without automatic removal',()=>{

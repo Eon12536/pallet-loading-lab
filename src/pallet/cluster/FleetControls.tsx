@@ -4,7 +4,7 @@ export function FleetControls({scenario,robots,quantity,onRobots,onQuantity,onAp
   <h4>6 SKU · ALPS 군집</h4>
   <label>로봇 수<input aria-label="군집 시연 로봇 수" type="number" min={2} max={8} step={1} value={robots} onChange={e=>onRobots(+e.target.value)}/></label>
   <label>SKU당 공급 수량<input aria-label="군집 시연 SKU당 수량" type="number" min={5} max={80} step={1} value={quantity} onChange={e=>onQuantity(+e.target.value)}/></label>
-  <p>전체 {quantity*6}개 · 로봇당 팔레트 1개 · 중앙 배차 · 무작위 입고<br/>벨트 315mm/s · 입고 빈도 1.5배 · 안전 간격 유지</p>
+  <p>전체 {quantity*6}개 · 로봇당 팔레트 1개 · 중앙 배차 · 무작위 입고<br/>벨트 315mm/s · 연속 공급 · 중앙 허브에서 병렬 분배 · 안전 간격 유지</p>
   <button onClick={onApply}>조건 적용 · 재실행</button>
   <p>팔레트 1200 × 1000mm<br/>높이 상한 <b>1200mm</b><br/>지지 ≥85% · 누적 하중 검사<br/>XY 0/90° · 합성 강도 / 안전계수 1.2</p>
   <p>입고 seed {scenario.arrival.seed}. 같은 SKU의 실제 면 접촉을 선호하는 17항목 사전식 군집 규칙을 사용합니다.</p>

@@ -1,3 +1,5 @@
+import {usesHub} from './hubConveyor';
+import {createHubConveyorView} from './HubConveyorView';
 import {tailGeometry,tailPoint} from './conveyorTail';
 /* Hallmark · factory component · existing industrial scene tokens.
  * Pre-emit critique: P4 H4 E5 S5 R5 V4. Main trunk / sub-lines / rounded final merge / inlet inspection. */
@@ -12,6 +14,7 @@ import { TWIN_CONVEYOR, TWIN_ROBOT_PALETTE } from './twinSceneTheme';
 import type { Pallet } from '../types';
 
 export function createBranchedConveyorView(p: Pallet) {
+  if(usesHub(p))return createHubConveyorView(p);
   const group = new THREE.Group(); group.name = 'main-and-sub-conveyors';
   const bounds = beltBounds(p), deck = CONVEYOR.deck / 1000, y = mainY / 1000, width = CONVEYOR.width / 1000;
   const steel = new THREE.MeshStandardMaterial({ color: TWIN_ROBOT_PALETTE.steel, metalness: .65, roughness: .35 });

@@ -47,7 +47,7 @@ export function applyDecision(s:Scenario,world:RelayWorld,motions:RelayMotion[],
   const b=w.boxes.find(b=>b.observation.id===proposal.boxId),slot=proposal.pallet??0,cell=palletCell(w,proposal.robot,slot),state=palletState(w,proposal.robot,slot),ck=checkKey(w,proposal.robot,slot);
   if(!b||b.status!=='belt'||b.observation.status==='damaged'||!scanned(b,w.time,s)||proposal.cellVersion!==cell.version||state.phase!=='loading')continue;
   if(usesBranches(s.pallet)&&b.flow?.transport?.kind==='main'){
-   if(proposal.candidates.length&&(!assigned||assigned.has(proposal.robot+':'+proposal.boxId))&&b.flow.transport.robot===undefined&&branchAvailable(w,proposal.robot,b)){b.flow.transport.robot=proposal.robot;b.owner=proposal.robot;b.flow.lastReason=`중앙 배차 R${proposal.robot+1} · 분기 대기`;w.revision++;}
+   if(proposal.candidates.length&&(!assigned||assigned.has(proposal.robot+':'+proposal.boxId))&&b.flow.transport.robot===undefined&&branchAvailable(w,proposal.robot,b,s.pallet)){b.flow.transport.robot=proposal.robot;b.owner=proposal.robot;b.flow.lastReason=`중앙 배차 R${proposal.robot+1} · 분기 대기`;w.revision++;}
    else b.flow.lastReason=proposal.reason;
    b.flow.checks[ck]={version:proposal.cellVersion,at:w.time,reason:proposal.reason,blocked:proposal.blocked,tested:proposal.tested};continue;
   }
@@ -103,7 +103,7 @@ export function advanceStream(s:Scenario,world:RelayWorld,motions:RelayMotion[],
  if(pending&&time>=flow.nextInfeed&&entryClear(pending,belt,time,flow.speed,s.pallet)){
   pending.status='belt';pending.flow={enteredAt:time,measuredAt:usesRoller(s.pallet)||usesBranches(s.pallet)?Infinity:time+(SCANNER_OFFSET+(s.intake?pending.observation.size.w/2:0))/flow.speed+.25,passes:0,lastReason:'이동 중 계측',checks:{}};if(usesRoller(s.pallet))pending.flow.roller={arc:0,limit:transportLength(s.pallet)-footprint(pending)/2,at:time,attempts:0};if(usesBranches(s.pallet))pending.flow.transport={kind:'main',arc:0,limit:0,at:time,attempts:0};flow.entered++;w.revision++;
   // Seeded irregular release intervals plus physical belt clearance; no overlapping spawn.
-  const jitter=((s.arrival.seed*31+flow.entered*7919)%997)/997;flow.nextInfeed=time+(2.6+jitter*2.6)/conveyorRate(s);
+  const jitter=((s.arrival.seed*31+flow.entered*7919)%997)/997;flow.nextInfeed=s.pallet.conveyorDistribution==='hub'?time:time+(2.6+jitter*2.6)/conveyorRate(s);
  }
  flow.inputClosed=!w.boxes.some(b=>b.status==='pending');
  for(const b of w.boxes){if(!b.flow)continue;

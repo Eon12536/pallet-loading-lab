@@ -18,5 +18,6 @@ export function clusterFleetDemo(order=0,robots=4,quantityPerSku=robots*10):Scen
  s.id='alps-cluster-fleet-demo';s.name=`ALPS 군집 다중 로봇 · 6 SKU / ${quantityPerSku*6}개 공급`;
  s.types.forEach(t=>t.quantity=quantityPerSku);
  s.clusterPreset!.demonstration={quantityPerSku};
+ if(robots>1)s.pallet.conveyorDistribution='hub';
  return s;
 }
